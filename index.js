@@ -1,21 +1,26 @@
+//fun idea: fly around and shoot missiles at each other
+//turret auto targets, can cycle targets, missiles track target, firing has cooldown?
+
 function update(progress) {
     if (input.up) {
-        player.velocity.y = -player.speed;
+        player.acceleration.y = -player.speed;
     } else if (input.down) {
-        player.velocity.y = player.speed;
+        player.acceleration.y = player.speed;
     } else {
-        player.velocity.y = 0;
+        player.acceleration.y = 0;
     }
 
     if (input.left) {
-        player.velocity.x = -player.speed;
+        player.acceleration.x = -player.speed;
     } else if (input.right) {
-        player.velocity.x = player.speed;
+        player.acceleration.x = player.speed;
     } else {
-        player.velocity.x = 0;
+        player.acceleration.x = 0;
     }
 
     const delta = progress / 1000;
+    player.velocity.x += player.acceleration.x * delta;
+    player.velocity.y += player.acceleration.y * delta;
     player.position.x += player.velocity.x * delta;
     player.position.y += player.velocity.y * delta;
 
@@ -56,7 +61,7 @@ function keyup(event) {
     input[direction] = false;
 }
 
-function resize(event) {
+function resize() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 }
@@ -82,7 +87,7 @@ const camera = {
 const player = {
     width: 50,
     height: 50,
-    speed: 100,
+    speed: 200,
     color: 'red',
     position: {
         x: 0,
@@ -91,7 +96,11 @@ const player = {
     velocity: {
         x: 0,
         y: 0,
-    }
+    },
+    acceleration: {
+        x: 0,
+        y: 0,
+    },
 };
 
 const wall = {
@@ -99,10 +108,6 @@ const wall = {
     height: 100,
     color: 'white',
     position: {
-        x: 0,
-        y: 0,
-    },
-    velocity: {
         x: 0,
         y: 0,
     }
