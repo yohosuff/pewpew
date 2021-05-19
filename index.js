@@ -2,6 +2,23 @@
 //turret auto targets, can cycle targets, missiles track target, firing has cooldown?
 
 function update(progress) {
+    handleInput();
+    updatePositions(progress);
+    detectCollisions();
+}
+
+function updatePositions(progress) {
+    const delta = progress / 1000;
+    
+    player.velocity.x += player.acceleration.x * delta;
+    player.velocity.y += player.acceleration.y * delta;
+    player.position.x += player.velocity.x * delta;
+    player.position.y += player.velocity.y * delta;
+
+    camera.follow(player);
+}
+
+function handleInput() {
     if (input.up) {
         player.acceleration.y = -player.speed;
     } else if (input.down) {
@@ -17,15 +34,6 @@ function update(progress) {
     } else {
         player.acceleration.x = 0;
     }
-
-    const delta = progress / 1000;
-    player.velocity.x += player.acceleration.x * delta;
-    player.velocity.y += player.acceleration.y * delta;
-    player.position.x += player.velocity.x * delta;
-    player.position.y += player.velocity.y * delta;
-
-    camera.follow(player);
-    detectCollisions();
 }
 
 function detectCollisions() {
