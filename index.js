@@ -24,7 +24,31 @@ function update(progress) {
     player.position.x += player.velocity.x * delta;
     player.position.y += player.velocity.y * delta;
 
-    follow(camera, player);
+    camera.follow(player);
+    detectCollisions();
+}
+
+function detectCollisions() {
+    const collidables = [player, wall];
+
+    for(let i = 0; i < collidables.length - 1; ++i) {
+        for(let j = i + 1; j < collidables.length; ++j) {
+            const a = collidables[i];
+            const b = collidables[j];
+
+            if(
+                a.position.x > b.position.x + b.width ||
+                b.position.x > a.position.x + a.width ||
+                a.position.y > b.position.y + b.height ||
+                b.position.y > a.position.y + a.height
+            ) {
+                a.collision = b.collision = false;
+                continue;
+            }
+            
+            a.collision = b.collision = true;
+        }
+    }
 }
 
 function draw() {
@@ -33,7 +57,7 @@ function draw() {
     const drawables = [player, wall];
 
     drawables.forEach(drawable => {
-        context.fillStyle = drawable.color;
+        context.fillStyle = drawable.collision ? 'green' : drawable.color;
         context.fillRect(
             drawable.position.x - (camera.position.x - window.innerWidth / 2),
             drawable.position.y - (camera.position.y - window.innerHeight / 2),
@@ -66,11 +90,6 @@ function resize() {
     canvas.height = window.innerHeight;
 }
 
-function follow(follower, followee) {
-    follower.position.x = followee.position.x;
-    follower.position.y = followee.position.y;
-}
-
 ////////////////////////////////////////////////////
 
 const camera = {
@@ -82,12 +101,16 @@ const camera = {
         x: 0,
         y: 0,
     },
+    follow: function(followee) {
+        this.position.x = followee.position.x;
+        this.position.y = followee.position.y;
+    },
 };
 
 const player = {
     width: 50,
     height: 50,
-    speed: 200,
+    speed: 400,
     color: 'red',
     position: {
         x: 0,
@@ -116,7 +139,7 @@ const wall = {
 player.position.x = window.innerWidth / 2 - player.width / 2;
 player.position.y = window.innerHeight / 2 - player.height / 2;
 
-follow(camera, player);
+camera.follow(player);
 
 const input = {
     up: false,
