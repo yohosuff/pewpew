@@ -9,52 +9,90 @@ function update(progress) {
 
 function updatePositions(progress) {
     const delta = progress / 1000;
-    
-    player.velocity.x += player.acceleration.x * delta;
-    player.velocity.y += player.acceleration.y * delta;
-    player.position.x += player.velocity.x * delta;
-    player.position.y += player.velocity.y * delta;
 
-    camera.follow(player);
+    const moveables = [
+        player1,
+        player2,
+    ];
+
+    moveables.forEach(moveable => {
+        moveable.velocity.x += moveable.acceleration.x * delta;
+        moveable.velocity.y += moveable.acceleration.y * delta;
+        moveable.position.x += moveable.velocity.x * delta;
+        moveable.position.y += moveable.velocity.y * delta;    
+    });
+
+    camera.follow(player1);
 }
 
 function handleInput() {
     if (input.up) {
-        player.acceleration.y = -player.speed;
+        player1.acceleration.y = -player1.speed;
     } else if (input.down) {
-        player.acceleration.y = player.speed;
+        player1.acceleration.y = player1.speed;
     } else {
-        player.acceleration.y = 0;
+        player1.acceleration.y = 0;
     }
 
     if (input.left) {
-        player.acceleration.x = -player.speed;
+        player1.acceleration.x = -player1.speed;
     } else if (input.right) {
-        player.acceleration.x = player.speed;
+        player1.acceleration.x = player1.speed;
     } else {
-        player.acceleration.x = 0;
+        player1.acceleration.x = 0;
     }
 }
 
+function getDistanceBetweenPoints(a, b) {
+    const distanceX = a.x - b.x;
+    const distanceY = a.y - b.y;
+    const distance = Math.sqrt(distanceX*distanceX + distanceY*distanceY);
+    return distance;
+}
+
+function getMagnitudeOfVector(v) {
+    return Math.sqrt(v.x * v.x + v.y * v.y);
+}
+
 function detectCollisions() {
-    const collidables = [player, wall];
+    const collidables = [
+        player1,
+        player2
+    ];
 
     for(let i = 0; i < collidables.length - 1; ++i) {
         for(let j = i + 1; j < collidables.length; ++j) {
             const a = collidables[i];
             const b = collidables[j];
 
-            if(
-                a.position.x > b.position.x + b.width ||
-                b.position.x > a.position.x + a.width ||
-                a.position.y > b.position.y + b.height ||
-                b.position.y > a.position.y + a.height
-            ) {
-                a.collision = b.collision = false;
+            const distance = getDistanceBetweenPoints(a.position, b.position);
+
+            if(distance > a.radius + b.radius) {
                 continue;
             }
+
+            const normal = {
+                x: b.position.x - a.position.x,
+                y: b.position.y - a.position.y,
+            }
+            const magnitudeNormal = getMagnitudeOfVector(normal);
+            normal.x /= magnitudeNormal;
+            normal.y /= magnitudeNormal;
+                        
+            const magnitudeA = getMagnitudeOfVector(a.velocity);
+            const magnitudeB = getMagnitudeOfVector(b.velocity);
+
+            const relativeVelocity = {
+                x: b.velocity.x - a.velocity.x,
+                y: b.velocity.y - a.velocity.y,
+            };
+            const magnitudeRelativeVelocity = getMagnitudeOfVector(relativeVelocity);
+
+            a.velocity.x = -normal.x * (magnitudeA - magnitudeRelativeVelocity);
+            a.velocity.y = -normal.y * (magnitudeA - magnitudeRelativeVelocity);
             
-            a.collision = b.collision = true;
+            b.velocity.x = normal.x * (magnitudeB + magnitudeRelativeVelocity);
+            b.velocity.y = normal.y * (magnitudeB + magnitudeRelativeVelocity);
         }
     }
 }
@@ -62,16 +100,24 @@ function detectCollisions() {
 function draw() {
     context.clearRect(0, 0, canvas.width, canvas.height);
 
-    const drawables = [player, wall];
+    const drawables = [
+        boundary,
+        player1, 
+        player2, 
+    ];
 
     drawables.forEach(drawable => {
-        context.fillStyle = drawable.collision ? 'green' : drawable.color;
-        context.fillRect(
-            drawable.position.x - (camera.position.x - window.innerWidth / 2),
+        //each drawable should draw itself... pass the context to drawable.draw()?
+        context.fillStyle = drawable.color;
+        context.beginPath();
+        context.arc(
+            drawable.position.x - (camera.position.x - window.innerWidth / 2), 
             drawable.position.y - (camera.position.y - window.innerHeight / 2),
-            drawable.width,
-            drawable.height
+            drawable.radius,
+            0,
+            2 * Math.PI
         );
+        context.fill();
     });
 }
 
@@ -115,9 +161,8 @@ const camera = {
     },
 };
 
-const player = {
-    width: 50,
-    height: 50,
+const player1 = {
+    radius: 50,
     speed: 400,
     color: 'red',
     position: {
@@ -134,20 +179,36 @@ const player = {
     },
 };
 
-const wall = {
-    width: 100,
-    height: 100,
+const player2 = {
+    radius: 50,
     color: 'white',
+    position: {
+        x: 0,
+        y: 0,
+    },
+    velocity: {
+        x: 0,
+        y: 0,
+    },
+    acceleration: {
+        x: 0,
+        y: 0,
+    },
+};
+
+const boundary = {
+    radius: 500,
+    color: 'blue',
     position: {
         x: 0,
         y: 0,
     }
 };
 
-player.position.x = window.innerWidth / 2 - player.width / 2;
-player.position.y = window.innerHeight / 2 - player.height / 2;
+player2.position.y = player1.position.y; // - player1.radius;
+player2.position.x = player1.position.x + player1.radius * 4;
 
-camera.follow(player);
+camera.follow(player1);
 
 const input = {
     up: false,
