@@ -19,30 +19,26 @@ class Vector {
     dotProduct(v) {
         return this.x * v.x + this.y * v.y;
     }
+
+    subtract(b) {
+        const a = new Vector(this.x, this.y);
+        a.x -= b.x;
+        a.y -= b.y;
+        return a;
+    }
+
+    multiplyByScalar(scalar) {
+        const a = new Vector(this.x, this.y);
+        a.x *= scalar;
+        a.y *= scalar;
+        return a;
+    }
 }
 
 function update(progress) {
     handleInput();
     updatePositions(progress);
-    detectCollisions();
-}
-
-function updatePositions(progress) {
-    const delta = progress / 1000;
-
-    const moveables = [
-        player1,
-        player2,
-    ];
-
-    moveables.forEach(moveable => {
-        moveable.velocity.x += moveable.acceleration.x * delta;
-        moveable.velocity.y += moveable.acceleration.y * delta;
-        moveable.position.x += moveable.velocity.x * delta;
-        moveable.position.y += moveable.velocity.y * delta;    
-    });
-
-    camera.follow(player1);
+    handleCollisions();
 }
 
 function handleInput() {
@@ -63,6 +59,24 @@ function handleInput() {
     }
 }
 
+function updatePositions(progress) {
+    const delta = progress / 1000;
+
+    const moveables = [
+        player1,
+        player2,
+    ];
+
+    moveables.forEach(moveable => {
+        moveable.velocity.x += moveable.acceleration.x * delta;
+        moveable.velocity.y += moveable.acceleration.y * delta;
+        moveable.position.x += moveable.velocity.x * delta;
+        moveable.position.y += moveable.velocity.y * delta;    
+    });
+
+    camera.follow(player1);
+}
+
 function getDistanceBetweenPoints(a, b) {
     const distanceX = a.x - b.x;
     const distanceY = a.y - b.y;
@@ -70,11 +84,7 @@ function getDistanceBetweenPoints(a, b) {
     return distance;
 }
 
-function getMagnitudeOfVector(v) {
-    return Math.sqrt(v.x * v.x + v.y * v.y);
-}
-
-function detectCollisions() {
+function handleCollisions() {
     const collidables = [
         player1,
         player2
@@ -82,46 +92,50 @@ function detectCollisions() {
 
     for(let i = 0; i < collidables.length - 1; ++i) {
         for(let j = i + 1; j < collidables.length; ++j) {
-
             const a = collidables[i];
             const b = collidables[j];
-
-            const distance = getDistanceBetweenPoints(a.position, b.position);
-
-            if(distance > a.radius + b.radius) {
+            
+            if (!areColliding(a, b)) {
                 continue;
             }
 
-            if(a === player1 && b === player2 || a === player2 && b === player1) {
-                console.log('collision', distance);
-            }
-
-            //https://github.com/OneLoneCoder/videos/blob/master/OneLoneCoder_Balls1.cpp
-            const overlap = 0.5 * (distance - a.radius - b.radius);
-            a.position.x -= overlap * (a.position.x - b.position.x) / distance;
-            a.position.y -= overlap * (a.position.y - b.position.y) / distance;
-            b.position.x += overlap * (a.position.x - b.position.x) / distance;
-            b.position.y += overlap * (a.position.y - b.position.y) / distance;
-            /////////////////////////////////////////////////////////////////////////////
-            
-            const normal = new Vector(
-                b.position.x - a.position.x,
-                b.position.y - a.position.y,
-            );
-
-            normal.toUnitVector();
-
-            //https://github.com/OneLoneCoder/videos/blob/master/OneLoneCoder_Balls1.cpp
-            const kx = (a.velocity.x - b.velocity.x);
-			const ky = (a.velocity.y - b.velocity.y);
-			const p = 2.0 * (normal.x * kx + normal.y * ky) / (a.mass + b.mass);
-			a.velocity.x = a.velocity.x - p * b.mass * normal.x;
-			a.velocity.y = a.velocity.y - p * b.mass * normal.y;
-			b.velocity.x = b.velocity.x + p * a.mass * normal.x;
-			b.velocity.y = b.velocity.y + p * a.mass * normal.y;
-            ////////////////////////////////////////////////////////////////////////////
+            collideElastically(a, b);
         }
     }
+}
+
+function areColliding(a, b) {
+    const distance = getDistanceBetweenPoints(a.position, b.position);
+    return distance <= a.radius + b.radius;
+}
+
+function collideElastically(a, b) {
+    separateCollidees(a, b);
+    const aVelocity = getNewVelocity(a, b);
+    const bVelocity = getNewVelocity(b, a);
+    a.velocity = aVelocity;
+    b.velocity = bVelocity;
+}
+
+//https://github.com/OneLoneCoder/videos/blob/master/OneLoneCoder_Balls1.cpp
+function separateCollidees(a, b) {
+    const distance = getDistanceBetweenPoints(a.position, b.position);
+    const overlap = 0.5 * (distance - a.radius - b.radius);
+    a.position.x -= overlap * (a.position.x - b.position.x) / distance;
+    a.position.y -= overlap * (a.position.y - b.position.y) / distance;
+    b.position.x += overlap * (a.position.x - b.position.x) / distance;
+    b.position.y += overlap * (a.position.y - b.position.y) / distance;
+}
+
+//https://en.wikipedia.org/wiki/Elastic_collision#Two-dimensional_collision_with_two_moving_objects
+function getNewVelocity(a, b) {
+    const mass = 2 * b.mass / (a.mass + b.mass);
+    const velocityDiff = a.velocity.subtract(b.velocity);
+    const positionDiff = a.position.subtract(b.position);
+    const dotProduct = velocityDiff.dotProduct(positionDiff);
+    const magnitude = Math.pow(positionDiff.magnitude, 2);
+    const rightSide = positionDiff.multiplyByScalar(mass * dotProduct / magnitude)
+    return a.velocity.subtract(rightSide);
 }
 
 function draw() {
@@ -219,8 +233,6 @@ const boundary = {
 
 player2.position.y = player1.position.y;
 player2.position.x = player1.position.x + player1.radius * 4;
-player1.velocity.x = 200;
-player1.velocity.y = 100;
 
 camera.follow(player1);
 
