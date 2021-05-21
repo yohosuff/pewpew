@@ -1,6 +1,26 @@
 //fun idea: fly around and shoot missiles at each other
 //turret auto targets, can cycle targets, missiles track target, firing has cooldown?
 
+class Vector {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    get magnitude() {
+        return Math.sqrt(this.x * this.x + this.y * this.y);
+    }
+
+    toUnitVector() {
+        this.x /= this.magnitude;
+        this.y /= this.magnitude;
+    }
+
+    dotProduct(v) {
+        return this.x * v.x + this.y * v.y;
+    }
+}
+
 function update(progress) {
     handleInput();
     updatePositions(progress);
@@ -46,7 +66,7 @@ function handleInput() {
 function getDistanceBetweenPoints(a, b) {
     const distanceX = a.x - b.x;
     const distanceY = a.y - b.y;
-    const distance = Math.sqrt(distanceX*distanceX + distanceY*distanceY);
+    const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
     return distance;
 }
 
@@ -62,6 +82,7 @@ function detectCollisions() {
 
     for(let i = 0; i < collidables.length - 1; ++i) {
         for(let j = i + 1; j < collidables.length; ++j) {
+
             const a = collidables[i];
             const b = collidables[j];
 
@@ -71,28 +92,34 @@ function detectCollisions() {
                 continue;
             }
 
-            const normal = {
-                x: b.position.x - a.position.x,
-                y: b.position.y - a.position.y,
+            if(a === player1 && b === player2 || a === player2 && b === player1) {
+                console.log('collision', distance);
             }
-            const magnitudeNormal = getMagnitudeOfVector(normal);
-            normal.x /= magnitudeNormal;
-            normal.y /= magnitudeNormal;
-                        
-            const magnitudeA = getMagnitudeOfVector(a.velocity);
-            const magnitudeB = getMagnitudeOfVector(b.velocity);
 
-            const relativeVelocity = {
-                x: b.velocity.x - a.velocity.x,
-                y: b.velocity.y - a.velocity.y,
-            };
-            const magnitudeRelativeVelocity = getMagnitudeOfVector(relativeVelocity);
-
-            a.velocity.x = -normal.x * (magnitudeA - magnitudeRelativeVelocity);
-            a.velocity.y = -normal.y * (magnitudeA - magnitudeRelativeVelocity);
+            //https://github.com/OneLoneCoder/videos/blob/master/OneLoneCoder_Balls1.cpp
+            const overlap = 0.5 * (distance - a.radius - b.radius);
+            a.position.x -= overlap * (a.position.x - b.position.x) / distance;
+            a.position.y -= overlap * (a.position.y - b.position.y) / distance;
+            b.position.x += overlap * (a.position.x - b.position.x) / distance;
+            b.position.y += overlap * (a.position.y - b.position.y) / distance;
+            /////////////////////////////////////////////////////////////////////////////
             
-            b.velocity.x = normal.x * (magnitudeB + magnitudeRelativeVelocity);
-            b.velocity.y = normal.y * (magnitudeB + magnitudeRelativeVelocity);
+            const normal = new Vector(
+                b.position.x - a.position.x,
+                b.position.y - a.position.y,
+            );
+
+            normal.toUnitVector();
+
+            //https://github.com/OneLoneCoder/videos/blob/master/OneLoneCoder_Balls1.cpp
+            const kx = (a.velocity.x - b.velocity.x);
+			const ky = (a.velocity.y - b.velocity.y);
+			const p = 2.0 * (normal.x * kx + normal.y * ky) / (a.mass + b.mass);
+			a.velocity.x = a.velocity.x - p * b.mass * normal.x;
+			a.velocity.y = a.velocity.y - p * b.mass * normal.y;
+			b.velocity.x = b.velocity.x + p * a.mass * normal.x;
+			b.velocity.y = b.velocity.y + p * a.mass * normal.y;
+            ////////////////////////////////////////////////////////////////////////////
         }
     }
 }
@@ -118,6 +145,16 @@ function draw() {
             2 * Math.PI
         );
         context.fill();
+
+        if(drawable.velocity) {
+            context.fillStyle = 'white';
+            context.textAlign = 'center';
+            context.fillText(
+                `velocity.x: ${drawable.velocity.x.toFixed(1)}, velocity.y:  ${drawable.velocity.y.toFixed(1)}`,
+                drawable.position.x - (camera.position.x - window.innerWidth / 2),
+                drawable.position.y - (camera.position.y - window.innerHeight / 2)
+            );
+        }
     });
 }
 
@@ -147,14 +184,8 @@ function resize() {
 ////////////////////////////////////////////////////
 
 const camera = {
-    position: {
-        x: 0,
-        y: 0,
-    },
-    velocity: {
-        x: 0,
-        y: 0,
-    },
+    position: new Vector(0,0),
+    velocity: new Vector(0,0),
     follow: function(followee) {
         this.position.x = followee.position.x;
         this.position.y = followee.position.y;
@@ -163,50 +194,33 @@ const camera = {
 
 const player1 = {
     radius: 50,
+    mass: 1,
     speed: 400,
     color: 'red',
-    position: {
-        x: 0,
-        y: 0,
-    },
-    velocity: {
-        x: 0,
-        y: 0,
-    },
-    acceleration: {
-        x: 0,
-        y: 0,
-    },
+    position: new Vector(0,0),
+    velocity: new Vector(0,0),
+    acceleration: new Vector(0,0),
 };
 
 const player2 = {
     radius: 50,
-    color: 'white',
-    position: {
-        x: 0,
-        y: 0,
-    },
-    velocity: {
-        x: 0,
-        y: 0,
-    },
-    acceleration: {
-        x: 0,
-        y: 0,
-    },
+    mass: 1,
+    color: 'green',
+    position: new Vector(0,0),
+    velocity: new Vector(0,0),
+    acceleration: new Vector(0,0),
 };
 
 const boundary = {
     radius: 500,
     color: 'blue',
-    position: {
-        x: 0,
-        y: 0,
-    }
+    position: new Vector(0,0),
 };
 
-player2.position.y = player1.position.y; // - player1.radius;
+player2.position.y = player1.position.y;
 player2.position.x = player1.position.x + player1.radius * 4;
+player1.velocity.x = 200;
+player1.velocity.y = 100;
 
 camera.follow(player1);
 
