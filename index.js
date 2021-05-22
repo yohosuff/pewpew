@@ -35,6 +35,40 @@ class Vector {
     }
 }
 
+class Player {
+    constructor(color) {
+        this.radius = 50;
+        this.mass = 1;
+        this.speed = 400;
+        this.color = color;
+        this.position = new Vector(0, 0);
+        this.velocity = new Vector(0, 0);
+        this.acceleration = new Vector(0, 0);
+    }
+
+    draw(context, camera) {
+        context.fillStyle = this.color;
+        context.beginPath();
+        context.arc(
+            this.position.x - (camera.position.x - window.innerWidth / 2), 
+            this.position.y - (camera.position.y - window.innerHeight / 2),
+            this.radius,
+            0,
+            2 * Math.PI
+        );
+        context.fill();
+
+        // debug info
+        context.fillStyle = 'white';
+        context.textAlign = 'center';
+        context.fillText(
+            `vx: ${this.velocity.x.toFixed(1)}, vy:  ${this.velocity.y.toFixed(1)}`,
+            this.position.x - (camera.position.x - window.innerWidth / 2),
+            this.position.y - (camera.position.y - window.innerHeight / 2)
+        );
+    }
+}
+
 function update(progress) {
     handleInput();
     updatePositions(progress);
@@ -143,32 +177,12 @@ function draw() {
 
     const drawables = [
         boundary,
-        player1, 
-        player2, 
+        player1,
+        player2,
     ];
 
     drawables.forEach(drawable => {
-        //each drawable should draw itself... pass the context to drawable.draw()?
-        context.fillStyle = drawable.color;
-        context.beginPath();
-        context.arc(
-            drawable.position.x - (camera.position.x - window.innerWidth / 2), 
-            drawable.position.y - (camera.position.y - window.innerHeight / 2),
-            drawable.radius,
-            0,
-            2 * Math.PI
-        );
-        context.fill();
-
-        if(drawable.velocity) {
-            context.fillStyle = 'white';
-            context.textAlign = 'center';
-            context.fillText(
-                `velocity.x: ${drawable.velocity.x.toFixed(1)}, velocity.y:  ${drawable.velocity.y.toFixed(1)}`,
-                drawable.position.x - (camera.position.x - window.innerWidth / 2),
-                drawable.position.y - (camera.position.y - window.innerHeight / 2)
-            );
-        }
+        drawable.draw(context, camera);
     });
 }
 
@@ -206,29 +220,25 @@ const camera = {
     },
 };
 
-const player1 = {
-    radius: 50,
-    mass: 1,
-    speed: 400,
-    color: 'red',
-    position: new Vector(0,0),
-    velocity: new Vector(0,0),
-    acceleration: new Vector(0,0),
-};
-
-const player2 = {
-    radius: 50,
-    mass: 1,
-    color: 'green',
-    position: new Vector(0,0),
-    velocity: new Vector(0,0),
-    acceleration: new Vector(0,0),
-};
+const player1 = new Player('red');
+const player2 = new Player('green');
 
 const boundary = {
     radius: 500,
     color: 'blue',
     position: new Vector(0,0),
+    draw: function(context) {
+        context.fillStyle = this.color;
+        context.beginPath();
+        context.arc(
+            this.position.x - (camera.position.x - window.innerWidth / 2), 
+            this.position.y - (camera.position.y - window.innerHeight / 2),
+            this.radius,
+            0,
+            2 * Math.PI
+        );
+        context.fill();
+    },
 };
 
 player2.position.y = player1.position.y;
