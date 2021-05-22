@@ -1,0 +1,11 @@
+{
+  "name": "pewpew",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "start": "tsc -w"
+  },
+  "devDependencies": {
+    "typescript": "^4.2.4"
+  }
+}

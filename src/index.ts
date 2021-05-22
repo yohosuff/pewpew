@@ -1,8 +1,12 @@
-//fun idea: fly around and shoot missiles at each other
+//fun idea: fly around and shoot missiles at each otherr
 //turret auto targets, can cycle targets, missiles track target, firing has cooldown?
 
 class Vector {
-    constructor(x, y) {
+
+    x: number;
+    y: number;
+
+    constructor(x: number, y: number) {
         this.x = x;
         this.y = y;
     }
@@ -16,18 +20,18 @@ class Vector {
         this.y /= this.magnitude;
     }
 
-    dotProduct(v) {
+    dotProduct(v: Vector) {
         return this.x * v.x + this.y * v.y;
     }
 
-    subtract(b) {
+    subtract(b: Vector) {
         const a = new Vector(this.x, this.y);
         a.x -= b.x;
         a.y -= b.y;
         return a;
     }
 
-    multiplyByScalar(scalar) {
+    multiplyByScalar(scalar: number) {
         const a = new Vector(this.x, this.y);
         a.x *= scalar;
         a.y *= scalar;
@@ -36,6 +40,14 @@ class Vector {
 }
 
 class Player {
+    radius: number;
+    mass: number;
+    speed: number;
+    color: string;
+    position: Vector;
+    velocity: Vector;
+    acceleration: Vector;
+
     constructor(color) {
         this.radius = 50;
         this.mass = 1;
@@ -186,7 +198,7 @@ function draw() {
     });
 }
 
-function loop(timestamp) {
+function loop(timestamp: number) {
     const progress = timestamp - lastRender;
     update(progress);
     draw();
@@ -194,7 +206,7 @@ function loop(timestamp) {
     window.requestAnimationFrame(loop);
 }
 
-function keydown(event) {
+function keydown(event: KeyboardEvent) {
     const direction = keyMap[event.code];
     input[direction] = true;
 }
