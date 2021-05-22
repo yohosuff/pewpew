@@ -1,87 +1,16 @@
 //fun idea: fly around and shoot missiles at each otherr
 //turret auto targets, can cycle targets, missiles track target, firing has cooldown?
+//get multiplayer going with socket.io
+//add button to enable ai with steering behavior to hit other players
 
-class Vector {
+import './index.css';
 
-    x: number;
-    y: number;
+import { Camera } from './camera';
+import { Input } from './input';
+import { Player } from "./player";
+import { Vector } from "./vector";
 
-    constructor(x: number, y: number) {
-        this.x = x;
-        this.y = y;
-    }
-
-    get magnitude() {
-        return Math.sqrt(this.x * this.x + this.y * this.y);
-    }
-
-    toUnitVector() {
-        this.x /= this.magnitude;
-        this.y /= this.magnitude;
-    }
-
-    dotProduct(v: Vector) {
-        return this.x * v.x + this.y * v.y;
-    }
-
-    subtract(b: Vector) {
-        const a = new Vector(this.x, this.y);
-        a.x -= b.x;
-        a.y -= b.y;
-        return a;
-    }
-
-    multiplyByScalar(scalar: number) {
-        const a = new Vector(this.x, this.y);
-        a.x *= scalar;
-        a.y *= scalar;
-        return a;
-    }
-}
-
-class Player {
-    radius: number;
-    mass: number;
-    speed: number;
-    color: string;
-    position: Vector;
-    velocity: Vector;
-    acceleration: Vector;
-
-    constructor(color) {
-        this.radius = 50;
-        this.mass = 1;
-        this.speed = 400;
-        this.color = color;
-        this.position = new Vector(0, 0);
-        this.velocity = new Vector(0, 0);
-        this.acceleration = new Vector(0, 0);
-    }
-
-    draw(context, camera) {
-        context.fillStyle = this.color;
-        context.beginPath();
-        context.arc(
-            this.position.x - (camera.position.x - window.innerWidth / 2), 
-            this.position.y - (camera.position.y - window.innerHeight / 2),
-            this.radius,
-            0,
-            2 * Math.PI
-        );
-        context.fill();
-
-        // debug info
-        context.fillStyle = 'white';
-        context.textAlign = 'center';
-        context.fillText(
-            `vx: ${this.velocity.x.toFixed(1)}, vy:  ${this.velocity.y.toFixed(1)}`,
-            this.position.x - (camera.position.x - window.innerWidth / 2),
-            this.position.y - (camera.position.y - window.innerHeight / 2)
-        );
-    }
-}
-
-function update(progress) {
+function update(progress: number) {
     handleInput();
     updatePositions(progress);
     handleCollisions();
@@ -105,7 +34,7 @@ function handleInput() {
     }
 }
 
-function updatePositions(progress) {
+function updatePositions(progress: number) {
     const delta = progress / 1000;
 
     const moveables = [
@@ -123,7 +52,7 @@ function updatePositions(progress) {
     camera.follow(player1);
 }
 
-function getDistanceBetweenPoints(a, b) {
+function getDistanceBetweenPoints(a: Vector, b: Vector) {
     const distanceX = a.x - b.x;
     const distanceY = a.y - b.y;
     const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
@@ -150,12 +79,12 @@ function handleCollisions() {
     }
 }
 
-function areColliding(a, b) {
+function areColliding(a: Player, b: Player) {
     const distance = getDistanceBetweenPoints(a.position, b.position);
     return distance <= a.radius + b.radius;
 }
 
-function collideElastically(a, b) {
+function collideElastically(a: Player, b: Player) {
     separateCollidees(a, b);
     const aVelocity = getNewVelocity(a, b);
     const bVelocity = getNewVelocity(b, a);
@@ -164,7 +93,7 @@ function collideElastically(a, b) {
 }
 
 //https://github.com/OneLoneCoder/videos/blob/master/OneLoneCoder_Balls1.cpp
-function separateCollidees(a, b) {
+function separateCollidees(a: Player, b: Player) {
     const distance = getDistanceBetweenPoints(a.position, b.position);
     const overlap = 0.5 * (distance - a.radius - b.radius);
     a.position.x -= overlap * (a.position.x - b.position.x) / distance;
@@ -174,7 +103,7 @@ function separateCollidees(a, b) {
 }
 
 //https://en.wikipedia.org/wiki/Elastic_collision#Two-dimensional_collision_with_two_moving_objects
-function getNewVelocity(a, b) {
+function getNewVelocity(a: Player, b: Player) {
     const mass = 2 * b.mass / (a.mass + b.mass);
     const velocityDiff = a.velocity.subtract(b.velocity);
     const positionDiff = a.position.subtract(b.position);
@@ -207,13 +136,21 @@ function loop(timestamp: number) {
 }
 
 function keydown(event: KeyboardEvent) {
-    const direction = keyMap[event.code];
-    input[direction] = true;
+    switch(event.code) {
+        case 'KeyW': input.up = true; break;
+        case 'KeyS': input.down = true; break;
+        case 'KeyA': input.left = true; break;
+        case 'KeyD': input.right = true; break;
+    }
 }
 
-function keyup(event) {
-    const direction = keyMap[event.code];
-    input[direction] = false;
+function keyup(event: KeyboardEvent) {
+    switch(event.code) {
+        case 'KeyW': input.up = false; break;
+        case 'KeyS': input.down = false; break;
+        case 'KeyA': input.left = false; break;
+        case 'KeyD': input.right = false; break;
+    }
 }
 
 function resize() {
@@ -221,25 +158,15 @@ function resize() {
     canvas.height = window.innerHeight;
 }
 
-////////////////////////////////////////////////////
-
-const camera = {
-    position: new Vector(0,0),
-    velocity: new Vector(0,0),
-    follow: function(followee) {
-        this.position.x = followee.position.x;
-        this.position.y = followee.position.y;
-    },
-};
-
+const camera = new Camera();
 const player1 = new Player('red');
-const player2 = new Player('green');
+const player2 = new Player('teal');
 
 const boundary = {
     radius: 500,
     color: 'blue',
     position: new Vector(0,0),
-    draw: function(context) {
+    draw: function(context: CanvasRenderingContext2D) {
         context.fillStyle = this.color;
         context.beginPath();
         context.arc(
@@ -258,28 +185,21 @@ player2.position.x = player1.position.x + player1.radius * 4;
 
 camera.follow(player1);
 
-const input = {
-    up: false,
-    down: false,
-    left: false,
-    right: false,
-};
+const input = new Input();
 
-const canvas = document.getElementsByTagName('canvas')[0];
+const canvas = document.createElement('canvas');
+
+document.body.appendChild(canvas);
+
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
+
 const context = canvas.getContext('2d');
 
 let lastRender = 0;
 window.requestAnimationFrame(loop);
 
-const keyMap = {
-    'KeyW': 'up',
-    'KeyS': 'down',
-    'KeyA': 'left',
-    'KeyD': 'right',
-};
-
 window.addEventListener('keydown', keydown);
 window.addEventListener('keyup', keyup);
 window.addEventListener('resize', resize);
+
