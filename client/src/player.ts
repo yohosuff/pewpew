@@ -2,13 +2,15 @@ import { Camera } from "./camera";
 import { Vector } from "./vector";
 
 export class Player {
+    position: Vector;
     radius: number;
+    color: string;
+
     mass: number;
     speed: number;
-    color: string;
-    position: Vector;
     velocity: Vector;
     acceleration: Vector;
+    id: string;
 
     constructor(color: string) {
         this.radius = 50;

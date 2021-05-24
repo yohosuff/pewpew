@@ -9,47 +9,40 @@ import { Camera } from './camera';
 import { Input } from './input';
 import { Player } from "./player";
 import { Vector } from "./vector";
-
-function update(progress: number) {
-    handleInput();
-    updatePositions(progress);
-    handleCollisions();
-}
+import { EventName } from '../../server/src/event-name';
+import { io } from 'socket.io-client';
 
 function handleInput() {
     if (input.up) {
-        player1.acceleration.y = -player1.speed;
+        me.acceleration.y = -me.speed;
     } else if (input.down) {
-        player1.acceleration.y = player1.speed;
+        me.acceleration.y = me.speed;
     } else {
-        player1.acceleration.y = 0;
+        me.acceleration.y = 0;
     }
 
     if (input.left) {
-        player1.acceleration.x = -player1.speed;
+        me.acceleration.x = -me.speed;
     } else if (input.right) {
-        player1.acceleration.x = player1.speed;
+        me.acceleration.x = me.speed;
     } else {
-        player1.acceleration.x = 0;
+        me.acceleration.x = 0;
     }
 }
 
-function updatePositions(progress: number) {
-    const delta = progress / 1000;
-
+function updatePositions(delta: number) {
     const moveables = [
-        player1,
-        player2,
+        ...Array.from(players.values()),
     ];
 
     moveables.forEach(moveable => {
         moveable.velocity.x += moveable.acceleration.x * delta;
         moveable.velocity.y += moveable.acceleration.y * delta;
         moveable.position.x += moveable.velocity.x * delta;
-        moveable.position.y += moveable.velocity.y * delta;    
+        moveable.position.y += moveable.velocity.y * delta;
     });
 
-    camera.follow(player1);
+    camera.follow(me);
 }
 
 function getDistanceBetweenPoints(a: Vector, b: Vector) {
@@ -61,8 +54,7 @@ function getDistanceBetweenPoints(a: Vector, b: Vector) {
 
 function handleCollisions() {
     const collidables = [
-        player1,
-        player2
+        ...Array.from(players.values()),
     ];
 
     for(let i = 0; i < collidables.length - 1; ++i) {
@@ -118,8 +110,7 @@ function draw() {
 
     const drawables = [
         boundary,
-        player1,
-        player2,
+        ...Array.from(players.values()),
     ];
 
     drawables.forEach(drawable => {
@@ -127,12 +118,18 @@ function draw() {
     });
 }
 
-function loop(timestamp: number) {
-    const progress = timestamp - lastRender;
-    update(progress);
-    draw();
-    lastRender = timestamp;
+function loop(now: number) {
+    const delta = (now - previous) / 1000;
+    update(delta);
+    previous = now;
     window.requestAnimationFrame(loop);
+}
+
+function update(delta: number) {
+    handleInput();
+    updatePositions(delta);
+    handleCollisions();
+    draw();
 }
 
 function keydown(event: KeyboardEvent) {
@@ -142,6 +139,8 @@ function keydown(event: KeyboardEvent) {
         case 'KeyA': input.left = true; break;
         case 'KeyD': input.right = true; break;
     }
+
+    socket.emit(EventName.INPUT, input);
 }
 
 function keyup(event: KeyboardEvent) {
@@ -151,6 +150,8 @@ function keyup(event: KeyboardEvent) {
         case 'KeyA': input.left = false; break;
         case 'KeyD': input.right = false; break;
     }
+
+    socket.emit(EventName.INPUT, input);
 }
 
 function resize() {
@@ -159,8 +160,7 @@ function resize() {
 }
 
 const camera = new Camera();
-const player1 = new Player('red');
-const player2 = new Player('teal');
+
 
 const boundary = {
     radius: 500,
@@ -180,13 +180,8 @@ const boundary = {
     },
 };
 
-player2.position.y = player1.position.y;
-player2.position.x = player1.position.x + player1.radius * 4;
-
-camera.follow(player1);
-
+const players = new Map<string, Player>();
 const input = new Input();
-
 const canvas = document.createElement('canvas');
 
 document.body.appendChild(canvas);
@@ -196,10 +191,71 @@ canvas.height = window.innerHeight;
 
 const context = canvas.getContext('2d');
 
-let lastRender = 0;
-window.requestAnimationFrame(loop);
+let previous = 0;
 
-window.addEventListener('keydown', keydown);
+//disabling for now as server will send updates
+//it plays pretty good locally, but it will probably start to suck over the internet
+//window.requestAnimationFrame(loop);
+
+window.addEventListener('keydown', keydown); //this should only fire once....
 window.addEventListener('keyup', keyup);
 window.addEventListener('resize', resize);
 
+const socket = initializeSocket();
+
+draw();
+
+let me: Player;
+
+function initializeSocket() {
+    const socket = io('http://localhost:3000');
+
+    socket.on(EventName.WELCOME, welcome => {
+        
+        me = new Player('red');
+        me.id = welcome.id;
+        players.set(me.id, me);
+
+        welcome.players.forEach((updatedPlayer: any) => {
+            const player = players.get(updatedPlayer.id);
+            if(player) {
+                player.position = updatedPlayer.position;
+            } else {
+                const newPlayer = new Player('red');
+                newPlayer.id = updatedPlayer.id;
+                players.set(newPlayer.id, newPlayer);
+            }
+        });
+
+        camera.follow(me);
+        draw();
+
+        socket.on(EventName.UPDATE, (updatedPlayers: any[]) => {
+            updatedPlayers.forEach(updatedPlayer => {
+                const player = players.get(updatedPlayer.id);
+                if(!player) {
+                    return;
+                }
+                player.position = updatedPlayer.position;
+            });
+            camera.follow(me);
+            draw();
+        });
+
+        socket.on(EventName.PLAYER_JOINED, joinedPlayer => {
+            console.log('player joined', joinedPlayer.id)
+            const newPlayer = new Player('red');
+            newPlayer.id = joinedPlayer.id;
+            players.set(newPlayer.id, newPlayer);
+            draw();
+        });
+
+        socket.on(EventName.PLAYER_LEFT, leftPlayer => {
+            console.log('player left', leftPlayer.id);
+            players.delete(leftPlayer.id);
+            draw();
+        });
+    });
+
+    return socket;
+}
