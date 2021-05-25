@@ -132,28 +132,6 @@ function update(delta: number) {
     draw();
 }
 
-function keydown(event: KeyboardEvent) {
-    switch(event.code) {
-        case 'KeyW': input.up = true; break;
-        case 'KeyS': input.down = true; break;
-        case 'KeyA': input.left = true; break;
-        case 'KeyD': input.right = true; break;
-    }
-
-    socket.emit(EventName.INPUT, input);
-}
-
-function keyup(event: KeyboardEvent) {
-    switch(event.code) {
-        case 'KeyW': input.up = false; break;
-        case 'KeyS': input.down = false; break;
-        case 'KeyA': input.left = false; break;
-        case 'KeyD': input.right = false; break;
-    }
-
-    socket.emit(EventName.INPUT, input);
-}
-
 function resize() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -181,7 +159,6 @@ const boundary = {
 };
 
 const players = new Map<string, Player>();
-const input = new Input();
 const canvas = document.createElement('canvas');
 
 document.body.appendChild(canvas);
@@ -197,11 +174,16 @@ let previous = 0;
 //it plays pretty good locally, but it will probably start to suck over the internet
 //window.requestAnimationFrame(loop);
 
-window.addEventListener('keydown', keydown); //this should only fire once....
-window.addEventListener('keyup', keyup);
-window.addEventListener('resize', resize);
-
 const socket = initializeSocket();
+
+
+//it would be better to subscribe to an observable provided by Input that lets us know when input has changed
+//so we can emit the updated input to the server from outside of the input class
+const input = new Input(socket);
+
+window.addEventListener('keydown', input.keydown);
+window.addEventListener('keyup', input.keyup);
+window.addEventListener('resize', resize);
 
 draw();
 
