@@ -10,6 +10,7 @@ import { Player } from "./player";
 import { Vector } from "./vector";
 import { EventName } from '../../server/src/event-name';
 import { io } from 'socket.io-client';
+import { Settings } from './settings';
 
 const camera = new Camera();
 
@@ -47,7 +48,7 @@ let me: Player;
 window.addEventListener('resize', resize);
 
 function initializeSocket() {
-    const socket = io('http://localhost:3000');
+    const socket = io(Settings.SERVER);
 
     socket.on(EventName.WELCOME, welcome => {
         

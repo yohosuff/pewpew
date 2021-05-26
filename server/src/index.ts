@@ -4,14 +4,15 @@ import express from 'express';
 import { EventName } from './event-name';
 import { Player } from './player';
 import { Vector } from './vector';
+import { Settings } from './settings';
 
 const app = express();
 const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
   cors: {
-    origin: 'http://localhost:8080',
-    methods: ['GET', 'POST']
+    origin: Settings.CLIENT,
+    methods: ['GET', 'POST'],
   }
 });
 
@@ -31,7 +32,6 @@ io.on('connection', socket => {
   players.set(socket.id, player);
 
   socket.on(EventName.INPUT, input => {
-    console.log('input', input);
     player.input = input;
   });
 
