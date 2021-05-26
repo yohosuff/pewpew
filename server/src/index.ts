@@ -22,7 +22,8 @@ io.on('connection', socket => {
 
   console.log('connection', socket.id);
 
-  const player = new Player('red');
+  const color = "#" + Math.floor(Math.random() * 16777215).toString(16);
+  const player = new Player(color);
   player.id = socket.id;
   player.socket = socket;
   player.position = new Vector(
@@ -46,10 +47,12 @@ io.on('connection', socket => {
 
   socket.emit(EventName.WELCOME, {
     id: player.id,
+    color: player.color,
     players: Array.from(players.values()).map(updatedPlayer => {
       return {
         id: updatedPlayer.id,
         position: updatedPlayer.position,
+        color: updatedPlayer.color,
       };
     })
   });
@@ -57,6 +60,7 @@ io.on('connection', socket => {
   socket.broadcast.emit(EventName.PLAYER_JOINED, {
     id: player.id,
     position: player.position,
+    color: player.color,
   });
 });
 

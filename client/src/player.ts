@@ -6,6 +6,8 @@ export class Player {
     position: Vector;
     radius: number;
     color: string;
+    
+    debugging = false;;
 
     constructor(color: string) {
         this.position = new Vector(0, 0);
@@ -23,14 +25,15 @@ export class Player {
         );
         context.fill();
 
-        // debug info
-        context.fillStyle = 'white';
-        context.textAlign = 'center';
-        context.font = "12px Arial";
-        context.fillText(
-            `${this.position.x.toFixed(1)} ${this.position.y.toFixed(1)}`,
-            camera.getScreenX(this),
-            camera.getScreenY(this),
-        );
+        if(this.debugging) {
+            context.fillStyle = 'white';
+            context.textAlign = 'center';
+            context.font = "12px Arial";
+            context.fillText(
+                `${this.position.x.toFixed(1)} ${this.position.y.toFixed(1)}`,
+                camera.getScreenX(this),
+                camera.getScreenY(this),
+            );
+        }
     }
 }

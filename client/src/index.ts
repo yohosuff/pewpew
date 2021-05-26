@@ -51,8 +51,8 @@ function initializeSocket() {
     const socket = io(Settings.SERVER);
 
     socket.on(EventName.WELCOME, welcome => {
-        
-        me = new Player('red');
+
+        me = new Player(welcome.color);
         me.id = welcome.id;
         players.set(me.id, me);
 
@@ -61,7 +61,7 @@ function initializeSocket() {
             if(player) {
                 player.position = updatedPlayer.position;
             } else {
-                const newPlayer = new Player('red');
+                const newPlayer = new Player(updatedPlayer.color);
                 newPlayer.id = updatedPlayer.id;
                 players.set(newPlayer.id, newPlayer);
             }
@@ -86,6 +86,7 @@ function initializeSocket() {
             console.log(`player ${joinedPlayer.id} joined`);
             const newPlayer = new Player('red');
             newPlayer.id = joinedPlayer.id;
+            newPlayer.color = joinedPlayer.color;
             players.set(newPlayer.id, newPlayer);
             draw();
         });
