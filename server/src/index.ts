@@ -30,7 +30,6 @@ io.on('connection', socket => {
   );
   players.set(socket.id, player);
 
-
   socket.on(EventName.INPUT, input => {
     console.log('input', input);
     player.input = input;
