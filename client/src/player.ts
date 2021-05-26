@@ -2,45 +2,35 @@ import { Camera } from "./camera";
 import { Vector } from "./vector";
 
 export class Player {
+    id: string;
     position: Vector;
     radius: number;
     color: string;
 
-    mass: number;
-    speed: number;
-    velocity: Vector;
-    acceleration: Vector;
-    id: string;
-
     constructor(color: string) {
-        this.radius = 50;
-        this.mass = 1;
-        this.speed = 400;
-        this.color = color;
         this.position = new Vector(0, 0);
-        this.velocity = new Vector(0, 0);
-        this.acceleration = new Vector(0, 0);
+        this.radius = 50;
+        this.color = color;
     }
 
     draw(context: CanvasRenderingContext2D, camera: Camera) {
         context.fillStyle = this.color;
         context.beginPath();
         context.arc(
-            this.position.x - (camera.position.x - window.innerWidth / 2), 
-            this.position.y - (camera.position.y - window.innerHeight / 2),
-            this.radius,
-            0,
-            2 * Math.PI
+            camera.getScreenX(this),
+            camera.getScreenY(this),
+            this.radius, 0, 2 * Math.PI,
         );
         context.fill();
 
         // debug info
         context.fillStyle = 'white';
         context.textAlign = 'center';
+        context.font = "12px Arial";
         context.fillText(
-            `vx: ${this.velocity.x.toFixed(1)}, vy:  ${this.velocity.y.toFixed(1)}`,
-            this.position.x - (camera.position.x - window.innerWidth / 2),
-            this.position.y - (camera.position.y - window.innerHeight / 2)
+            `${this.position.x.toFixed(1)} ${this.position.y.toFixed(1)}`,
+            camera.getScreenX(this),
+            camera.getScreenY(this),
         );
     }
 }

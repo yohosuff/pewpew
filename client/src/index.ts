@@ -21,8 +21,8 @@ const boundary = {
         context.fillStyle = this.color;
         context.beginPath();
         context.arc(
-            this.position.x - (camera.position.x - window.innerWidth / 2),
-            this.position.y - (camera.position.y - window.innerHeight / 2),
+            camera.getScreenX(this),
+            camera.getScreenY(this),
             this.radius, 0, 2 * Math.PI
         );
         context.fill();

@@ -12,4 +12,12 @@ export class Camera {
         this.position.x = followee.position.x;
         this.position.y = followee.position.y;
     }
+
+    getScreenX(drawable: any) {
+        return drawable.position.x - (this.position.x - window.innerWidth / 2);
+    }
+
+    getScreenY(drawable: any) {
+        return drawable.position.y - (this.position.y - window.innerHeight / 2);
+    }
 }
