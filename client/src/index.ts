@@ -7,37 +7,22 @@ import './index.css';
 import { Camera } from './camera';
 import { Input } from './input';
 import { Player } from "./player";
-import { Vector } from "./vector";
 import { EventName } from '../../server/src/event-name';
 import { io } from 'socket.io-client';
 import { Settings } from './settings';
+import { Star } from './star';
 
 const camera = new Camera();
-
-const boundary = {
-    radius: 500,
-    color: 'blue',
-    position: new Vector(0,0),
-    draw: function(context: CanvasRenderingContext2D) {
-        context.fillStyle = this.color;
-        context.beginPath();
-        context.arc(
-            camera.getScreenX(this),
-            camera.getScreenY(this),
-            this.radius, 0, 2 * Math.PI
-        );
-        context.fill();
-    },
-};
-
 const players = new Map<string, Player>();
 const canvas = document.createElement('canvas');
 document.body.appendChild(canvas);
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
+canvas.oncontextmenu = () => false;
 const context = canvas.getContext('2d');
 const socket = initializeSocket();
 const input = new Input();
+const stars = Star.generateStars(2000, -5000, 5000);
 
 input.inputChange.subscribe(input => {
     socket.emit(EventName.INPUT, input);
@@ -105,7 +90,7 @@ function draw() {
     context.clearRect(0, 0, canvas.width, canvas.height);
 
     const drawables = [
-        boundary,
+        ...stars,
         ...Array.from(players.values()),
     ];
 
