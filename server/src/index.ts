@@ -1,10 +1,10 @@
 import { Server } from 'socket.io';
 import { createServer } from 'http';
-import express from 'express';
 import { EventName } from './event-name';
 import { Player } from './player';
 import { Vector } from './vector';
 import { Settings } from './settings';
+import express from 'express';
 
 const app = express();
 const httpServer = createServer(app);
@@ -175,6 +175,7 @@ function updatePositions(delta: number) {
 function handleInput() {
   Array.from(players.values()).forEach(player => {
     const input = player.input;
+
     if (input.up) {
       player.acceleration.y = -player.speed;
     } else if (input.down) {

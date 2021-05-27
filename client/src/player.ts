@@ -6,8 +6,8 @@ export class Player {
     position: Vector;
     radius: number;
     color: string;
-    
-    debugging = false;;
+
+    debugging = false;
 
     constructor(color: string) {
         this.position = new Vector(0, 0);
