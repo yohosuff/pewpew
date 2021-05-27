@@ -5,6 +5,8 @@ import { Player } from './player';
 import { Vector } from './vector';
 import { Settings } from './settings';
 import express from 'express';
+import { Flag } from './flag';
+import { WelcomeDto } from './dtos/welcome-dto';
 
 const app = express();
 const httpServer = createServer(app);
@@ -17,6 +19,7 @@ const io = new Server(httpServer, {
 });
 
 const players = new Map<string, Player>();
+const flag = new Flag();
 
 io.on('connection', socket => {
 
@@ -45,17 +48,8 @@ io.on('connection', socket => {
     });
   });
 
-  socket.emit(EventName.WELCOME, {
-    id: player.id,
-    color: player.color,
-    players: Array.from(players.values()).map(updatedPlayer => {
-      return {
-        id: updatedPlayer.id,
-        position: updatedPlayer.position,
-        color: updatedPlayer.color,
-      };
-    })
-  });
+  const welcomeDto = new WelcomeDto(player, flag, players);
+  socket.emit(EventName.WELCOME, welcomeDto);
 
   socket.broadcast.emit(EventName.PLAYER_JOINED, {
     id: player.id,
@@ -113,16 +107,21 @@ function handleCollisions() {
       const a = playersArray[i];
       const b = playersArray[j];
 
-      if (!areColliding(a, b)) {
-        continue;
-      }
+      if (!areColliding(a, b)) { continue; }
 
       collideElastically(a, b);
     }
   }
+
+  for (const player of playersArray) {
+    if (!areColliding(player, flag)) { continue; }
+    flag.reposition();
+    io.emit(EventName.FLAG_UPDATE, flag);
+  }
 }
 
-function areColliding(a: Player, b: Player) {
+// we should use a collidable interface here or something...
+function areColliding(a: Player | Flag, b: Player | Flag) {
   const distance = getDistanceBetweenPoints(a.position, b.position);
   return distance <= a.radius + b.radius;
 }

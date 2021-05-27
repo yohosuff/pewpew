@@ -5,4 +5,5 @@ export class EventName {
   static readonly WELCOME = 'welcome';
   static readonly PLAYER_LEFT = 'player left';
   static readonly PLAYER_JOINED = 'player joined';
+  static readonly FLAG_UPDATE = 'FLAG_UPDATE';
 }

@@ -1,3 +1,4 @@
+import { PlayerDto } from "../../server/src/dtos/player-dto";
 import { Camera } from "./camera";
 import { Vector } from "./vector";
 
@@ -10,9 +11,17 @@ export class Player {
     debugging = false;
 
     constructor(color: string) {
+        this.color = color;
         this.position = new Vector(0, 0);
         this.radius = 50;
-        this.color = color;
+    }
+
+    static createFromPlayerDto(playerDto: PlayerDto) {
+        const player = new Player(playerDto.color);
+        player.id = playerDto.id;
+        player.position = playerDto.position;
+        player.radius = playerDto.radius;
+        return player;
     }
 
     draw(context: CanvasRenderingContext2D, camera: Camera) {
@@ -30,10 +39,14 @@ export class Player {
             context.textAlign = 'center';
             context.font = "12px Arial";
             context.fillText(
-                `${this.position.x.toFixed(1)} ${this.position.y.toFixed(1)}`,
+                `${this.getPositionString()}`,
                 camera.getScreenX(this),
                 camera.getScreenY(this),
             );
         }
+    }
+
+    getPositionString() {
+        return `${this.position.x.toFixed()} ${this.position.y.toFixed()}`;
     }
 }
