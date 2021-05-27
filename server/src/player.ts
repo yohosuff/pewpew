@@ -19,7 +19,7 @@ export class Player {
     this.radius = 50;
     this.color = color;
     this.mass = 1;
-    this.speed = 400;
+    this.speed = 2000;
     this.velocity = new Vector(0, 0);
     this.acceleration = new Vector(0, 0);
     this.input = new Input();
