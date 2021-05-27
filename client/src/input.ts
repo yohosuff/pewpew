@@ -23,10 +23,18 @@ export class Input {
         let changed = false;
     
         switch (event.code) {
-            case 'KeyW': changed = !this.up; this.up = true; break;
-            case 'KeyS': changed = !this.down; this.down = true; break;
-            case 'KeyA': changed = !this.left; this.left = true; break;
-            case 'KeyD': changed = !this.right; this.right = true; break;
+            case 'ArrowUp':
+            case 'KeyW':
+                changed = !this.up; this.up = true; break;
+            case 'ArrowDown':
+            case 'KeyS':
+                changed = !this.down; this.down = true; break;
+            case 'ArrowLeft':
+            case 'KeyA':
+                changed = !this.left; this.left = true; break;
+            case 'ArrowRight':
+            case 'KeyD':
+                changed = !this.right; this.right = true; break;
         }
     
         if (changed) {
@@ -40,10 +48,18 @@ export class Input {
         let changed = false;
     
         switch (event.code) {
-            case 'KeyW': changed = !!this.up; this.up = false; break;
-            case 'KeyS': changed = !!this.down; this.down = false; break;
-            case 'KeyA': changed = !!this.left; this.left = false; break;
-            case 'KeyD': changed = !!this.right; this.right = false; break;
+            case 'ArrowUp':
+            case 'KeyW': 
+                changed = !!this.up; this.up = false; break;
+            case 'ArrowDown':
+            case 'KeyS': 
+                changed = !!this.down; this.down = false; break;
+            case 'ArrowLeft':
+            case 'KeyA': 
+                changed = !!this.left; this.left = false; break;
+            case 'ArrowRight':
+            case 'KeyD': 
+                changed = !!this.right; this.right = false; break;
         }
     
         if (changed) {
