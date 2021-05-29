@@ -1,6 +1,6 @@
 import { Camera } from "./camera";
-import { Vector } from "./vector";
 import { Flag as ServerFlag } from "../../server/src/flag";
+import { Vector } from "../../server/src/vector";
 
 export class Flag {
   position: Vector;

@@ -1,8 +1,10 @@
+import { Vector } from "../../server/src/vector";
 import { Camera } from "./camera";
-import { Vector } from "./vector";
 
 export class Star {
     position: Vector;
+    
+    debugging = false;
     
     constructor(min: number, max: number) {
         const x = this.getRandomNumber(min, max);
@@ -19,7 +21,18 @@ export class Star {
         context.fillRect(
             camera.getScreenX(this),
             camera.getScreenY(this),
-            1, 1);
+            2, 2);
+        
+        if(this.debugging) {
+            context.fillStyle = 'white';
+            context.textAlign = 'center';
+            context.font = "12px Arial";
+            context.fillText(
+                `${camera.getScreenVector(this).getString()}`,
+                camera.getScreenX(this),
+                camera.getScreenY(this),
+            );
+        }
     }
 
     static generateStars(count: number, min: number, max: number) {

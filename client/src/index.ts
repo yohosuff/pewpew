@@ -27,7 +27,7 @@ canvas.oncontextmenu = () => false;
 const context = canvas.getContext('2d');
 const socket = initializeSocket();
 const input = new Input();
-const stars = Star.generateStars(2000, -5000, 5000);
+const stars = Star.generateStars(5000, -10000, 10000);
 const flag = new Flag();
 
 input.inputChange.subscribe(input => {
@@ -95,12 +95,14 @@ function draw() {
         ...Array.from(players.values()),
     ];
 
-    drawables.forEach(drawable => {
-        drawable.draw(context, camera);
-    });
+    drawables
+        .filter(drawable => camera.canSee(drawable))
+        .forEach(drawable => drawable.draw(context, camera));
 
-    //draw line to flag
+    drawLineToFlag();
+}
 
+function drawLineToFlag() {
     context.strokeStyle = 'red';
     context.beginPath();
     context.moveTo(

@@ -1,5 +1,5 @@
+import { Vector } from "../../server/src/vector";
 import { Player } from "./player";
-import { Vector } from "./vector";
 
 export class Camera {
     position: Vector;
@@ -19,5 +19,24 @@ export class Camera {
 
     getScreenY(drawable: any) {
         return drawable.position.y - (this.position.y - window.innerHeight / 2);
+    }
+
+    getScreenVector(drawable: any): Vector {
+        return new Vector(
+            this.getScreenX(drawable),
+            this.getScreenX(drawable),
+        );
+    }
+
+    canSee(drawable: any) {
+        const x = this.getScreenX(drawable);
+        const y = this.getScreenY(drawable);
+
+        if(x < 0) return false;
+        if(y < 0) return false;
+        if(x > window.innerWidth) return false;
+        if(y > window.innerHeight) return false;
+
+        return true;
     }
 }

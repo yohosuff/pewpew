@@ -1,6 +1,6 @@
 import { PlayerDto } from "../../server/src/dtos/player-dto";
+import { Vector } from "../../server/src/vector";
 import { Camera } from "./camera";
-import { Vector } from "./vector";
 
 export class Player {
     id: string;
@@ -39,7 +39,7 @@ export class Player {
             context.textAlign = 'center';
             context.font = "12px Arial";
             context.fillText(
-                `${this.getPositionString()}`,
+                `${camera.getScreenVector(this).getString()}`,
                 camera.getScreenX(this),
                 camera.getScreenY(this),
             );
@@ -47,6 +47,6 @@ export class Player {
     }
 
     getPositionString() {
-        return `${this.position.x.toFixed()} ${this.position.y.toFixed()}`;
+        return `${this.position.getString()}`;
     }
 }

@@ -12,6 +12,10 @@ export class Vector {
         return Math.sqrt(this.x * this.x + this.y * this.y);
     }
 
+    getString() {
+        return `${this.x.toFixed()} ${this.y.toFixed()}`;
+    }
+
     toUnitVector() {
         this.x /= this.magnitude;
         this.y /= this.magnitude;
