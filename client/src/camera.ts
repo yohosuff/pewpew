@@ -13,12 +13,24 @@ export class Camera {
         this.position.y = followee.position.y;
     }
 
-    getScreenX(drawable: any) {
-        return drawable.position.x - (this.position.x - window.innerWidth / 2);
+    getScreenX(worldPosition: Vector) {
+        const offset = this.position.x - window.innerWidth / 2;
+        return worldPosition.x - offset;
     }
 
-    getScreenY(drawable: any) {
-        return drawable.position.y - (this.position.y - window.innerHeight / 2);
+    getScreenY(worldPosition: Vector) {
+        const offset = this.position.y - window.innerHeight / 2;
+        return worldPosition.y - offset;
+    }
+
+    getWorldPosition(screenPosition: Vector): Vector {
+        const offsetX = this.position.x - window.innerWidth / 2;
+        const offsetY = this.position.y - window.innerHeight / 2;
+        const worldPosition = new Vector(
+            screenPosition.x + offsetX,
+            screenPosition.y + offsetY,
+        );
+        return worldPosition;
     }
 
     getScreenVector(drawable: any): Vector {
@@ -29,8 +41,8 @@ export class Camera {
     }
 
     canSee(drawable: any) {
-        const x = this.getScreenX(drawable);
-        const y = this.getScreenY(drawable);
+        const x = this.getScreenX(drawable.position);
+        const y = this.getScreenY(drawable.position);
 
         if(x < 0) return false;
         if(y < 0) return false;

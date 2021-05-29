@@ -16,6 +16,7 @@ import { Settings } from './settings';
 import { Star } from './star';
 import { Flag } from './flag';
 import { Flag as ServerFlag } from "../../server/src/flag";
+import { Vector } from '../../server/src/vector';
 
 const camera = new Camera();
 const players = new Map<string, Player>();
@@ -57,7 +58,8 @@ function initializeSocket() {
             updatedPlayers.forEach(updatedPlayer => {
                 const player = players.get(updatedPlayer.id);
                 if (!player) { return; }
-                player.position = updatedPlayer.position;
+                player.position.x = updatedPlayer.position.x;
+                player.position.y = updatedPlayer.position.y;
             });
             camera.follow(me);
             draw();
@@ -103,17 +105,62 @@ function draw() {
 }
 
 function drawLineToFlag() {
+    
+    //this is only the top right now... need to do left, right, and bottom of screen next
+    const intersectionPoint = getLineSegmentsIntersectionPoint(
+        me.position, 
+        flag.position,
+        camera.getWorldPosition(new Vector(0,0)),
+        camera.getWorldPosition(new Vector(window.innerWidth, 0)),
+    );
+
+    if(intersectionPoint) {
+        context.fillStyle = 'white';
+        context.beginPath();
+        context.arc(
+            camera.getScreenX(intersectionPoint),
+            camera.getScreenY(intersectionPoint),
+            25, 0, 2 * Math.PI,
+        );
+        context.fill();
+    }
+    
     context.strokeStyle = 'red';
     context.beginPath();
     context.moveTo(
-        camera.getScreenX(me),
-        camera.getScreenY(me),
+        camera.getScreenX(me.position),
+        camera.getScreenY(me.position),
     );
     context.lineTo(
-        camera.getScreenX(flag),
-        camera.getScreenY(flag),
+        camera.getScreenX(flag.position),
+        camera.getScreenY(flag.position),
     );
     context.stroke();
+}
+
+//https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
+function getLineSegmentsIntersectionPoint(p: Vector, p2: Vector, q: Vector, q2: Vector) {
+    const r = p2.subtract(p);
+    const s = q2.subtract(q);
+    const uNumerator = q.subtract(p).crossProduct(r);
+    const denominator = r.crossProduct(s);
+    const collinear = uNumerator === 0 && denominator === 0;
+
+    if (collinear) { return; }
+
+    const parallel = denominator === 0;
+
+    if (parallel) { return; }
+
+    const u = uNumerator / denominator;
+    const t = q.subtract(p).crossProduct(s) / denominator;
+    const intersecting = (t >= 0) && (t <= 1) && (u >= 0) && (u <= 1);
+
+    if(!intersecting) { return; }
+
+    const intersection = p.add(r.multiplyByScalar(t));
+
+    return intersection;
 }
 
 function resize() {

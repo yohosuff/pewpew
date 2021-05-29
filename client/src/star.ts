@@ -19,8 +19,8 @@ export class Star {
     draw(context: CanvasRenderingContext2D, camera: Camera) {
         context.fillStyle = 'white';
         context.fillRect(
-            camera.getScreenX(this),
-            camera.getScreenY(this),
+            camera.getScreenX(this.position),
+            camera.getScreenY(this.position),
             2, 2);
         
         if(this.debugging) {
@@ -29,8 +29,8 @@ export class Star {
             context.font = "12px Arial";
             context.fillText(
                 `${camera.getScreenVector(this).getString()}`,
-                camera.getScreenX(this),
-                camera.getScreenY(this),
+                camera.getScreenX(this.position),
+                camera.getScreenY(this.position),
             );
         }
     }

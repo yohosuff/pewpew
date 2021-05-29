@@ -19,7 +19,10 @@ export class Player {
     static createFromPlayerDto(playerDto: PlayerDto) {
         const player = new Player(playerDto.color);
         player.id = playerDto.id;
-        player.position = playerDto.position;
+        player.position = new Vector(
+            playerDto.position.x,
+            playerDto.position.y,
+        );
         player.radius = playerDto.radius;
         return player;
     }
@@ -28,8 +31,8 @@ export class Player {
         context.fillStyle = this.color;
         context.beginPath();
         context.arc(
-            camera.getScreenX(this),
-            camera.getScreenY(this),
+            camera.getScreenX(this.position),
+            camera.getScreenY(this.position),
             this.radius, 0, 2 * Math.PI,
         );
         context.fill();
@@ -40,8 +43,8 @@ export class Player {
             context.font = "12px Arial";
             context.fillText(
                 `${camera.getScreenVector(this).getString()}`,
-                camera.getScreenX(this),
-                camera.getScreenY(this),
+                camera.getScreenX(this.position),
+                camera.getScreenY(this.position),
             );
         }
     }

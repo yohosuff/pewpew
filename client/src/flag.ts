@@ -10,10 +10,12 @@ export class Flag {
   constructor() {
     this.color = 'white';
     this.radius = 25;
+    this.position = new Vector(0, 0);
   }
 
   update(flag: ServerFlag) {
-    this.position = flag.position;
+    this.position.x = flag.position.x;
+    this.position.y = flag.position.y;
     this.radius = flag.radius;
   }
 
@@ -26,8 +28,8 @@ export class Flag {
     context.fillStyle = this.color;
     context.beginPath();
     context.arc(
-      camera.getScreenX(this),
-      camera.getScreenY(this),
+      camera.getScreenX(this.position),
+      camera.getScreenY(this.position),
       this.radius, 0, 2 * Math.PI,
     );
     context.fill();
@@ -37,8 +39,8 @@ export class Flag {
     context.font = "12px Arial";
     context.fillText(
       `FLAG`,
-      camera.getScreenX(this),
-      camera.getScreenY(this),
+      camera.getScreenX(this.position),
+      camera.getScreenY(this.position),
     );
     
   }
