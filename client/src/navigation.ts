@@ -29,53 +29,109 @@ export class Navigation {
         ],
     };
 
+    textAlignMap: Map<string, CanvasTextAlign>;
+    textOffsetMap: Map<string, Vector>;
+    iconOffsetMap: Map<string, Vector>;
+
+    static readonly ICON_OFFSET = 15;
+    static readonly TEXT_OFFSET = 40;
+
+    constructor() {
+        this.textAlignMap = new Map<string, CanvasTextAlign>();
+        this.textAlignMap.set('top', 'center');
+        this.textAlignMap.set('bottom', 'center');
+        this.textAlignMap.set('left', 'left');
+        this.textAlignMap.set('right', 'right');
+    
+        this.textOffsetMap = new Map<string, Vector>();
+        this.textOffsetMap.set('top', new Vector(0, Navigation.TEXT_OFFSET));
+        this.textOffsetMap.set('bottom', new Vector(0, -Navigation.TEXT_OFFSET));
+        this.textOffsetMap.set('left', new Vector(Navigation.TEXT_OFFSET, 0));
+        this.textOffsetMap.set('right', new Vector(-Navigation.TEXT_OFFSET, 0));
+
+        this.iconOffsetMap = new Map<string, Vector>();
+        this.iconOffsetMap.set('top', new Vector(0, Navigation.ICON_OFFSET));
+        this.iconOffsetMap.set('bottom', new Vector(0, -Navigation.ICON_OFFSET));
+        this.iconOffsetMap.set('left', new Vector(Navigation.ICON_OFFSET, 0));
+        this.iconOffsetMap.set('right', new Vector(-Navigation.ICON_OFFSET, 0));
+    }
+
+    clamp(number: number, min: number, max: number) {
+        return Math.min(Math.max(number, min), max);
+    }
+
     draw(context: CanvasRenderingContext2D, camera: Camera, me: Player, flag: Flag) {
     
-        const navMarkerPosition = this.getNavMarkerPosition(me, flag, camera);
+        const markerPosition = this.getMarker(me, flag, camera);
         
-        if(navMarkerPosition) {
+        if(markerPosition) {
+                        
+            //icon
+            const iconOffset = this.iconOffsetMap.get(markerPosition.side);
             context.fillStyle = 'white';
             context.beginPath();
-            context.arc(
-                camera.getScreenX(navMarkerPosition),
-                camera.getScreenY(navMarkerPosition),
-                25, 0, 2 * Math.PI,
-            );
+            const iconScreenX = camera.getScreenX(markerPosition.position) + iconOffset.x;
+            const iconScreenY = camera.getScreenY(markerPosition.position) + iconOffset.y;
+            const iconScreenXClamped = this.clamp(iconScreenX, Navigation.ICON_OFFSET, window.innerWidth - Navigation.ICON_OFFSET);
+            const iconScreenYClamped = this.clamp(iconScreenY, Navigation.ICON_OFFSET, window.innerHeight - Navigation.ICON_OFFSET);
+            context.arc(iconScreenXClamped, iconScreenYClamped, 12.5, 0, 2 * Math.PI);
             context.fill();
+            
+            const fontSize = 18;
+            context.fillStyle = 'black'
+            context.font = `${fontSize}px Arial`;
+            context.textAlign = 'center';
+            context.fillText(`F`, iconScreenXClamped, iconScreenYClamped + 7);
+            
+            this.drawText(context, camera, me, flag, markerPosition);
         }
     }
 
-    getNavMarkerPosition(me: Player, flag: Flag, camera: Camera) {
-        let point: Vector;
+    drawText(context: CanvasRenderingContext2D, camera: Camera, me: Player, flag: Flag, markerPosition: { side: any; position: any; }) {
+        const textOffset = this.textOffsetMap.get(markerPosition.side);
+        context.fillStyle = 'red';
+        const fontSize = 12;
+        context.font = `${fontSize}px Arial`;
+        context.textAlign = this.textAlignMap.get(markerPosition.side);
+        const distance = me.position.distanceFrom(flag.position) / 100;
+        const textScreenX = camera.getScreenX(markerPosition.position) + textOffset.x;
+        const textScreenY = camera.getScreenY(markerPosition.position) + textOffset.y;
+        context.fillText(
+            `${distance.toFixed(1)} m`,
+            this.clamp(textScreenX, Navigation.ICON_OFFSET, window.innerWidth - Navigation.ICON_OFFSET),
+            this.clamp(textScreenY, Navigation.ICON_OFFSET, window.innerHeight - Navigation.ICON_OFFSET) + fontSize / 2,
+        );
+    }
 
-        point = this.getNavMarkerPositionForSide(me, flag, this.lineSegments.top, camera);
+    getMarker(me: Player, flag: Flag, camera: Camera) {
+        let position = this.getMarkerPositionForSide(me, flag, this.lineSegments.top, camera);
 
-        if (point) {
-            return point;
+        if (position) {
+            return { side: 'top', position };
         }
 
-        point = this.getNavMarkerPositionForSide(me, flag, this.lineSegments.bottom, camera);
+        position = this.getMarkerPositionForSide(me, flag, this.lineSegments.bottom, camera);
 
-        if (point) {
-            return point;
+        if (position) {
+            return { side: 'bottom', position };
         }
 
-        point = this.getNavMarkerPositionForSide(me, flag, this.lineSegments.left, camera);
+        position = this.getMarkerPositionForSide(me, flag, this.lineSegments.left, camera);
 
-        if (point) {
-            return point;
+        if (position) {
+            return { side: 'left', position };
         }
 
-        point = this.getNavMarkerPositionForSide(me, flag, this.lineSegments.right, camera);
+        position = this.getMarkerPositionForSide(me, flag, this.lineSegments.right, camera);
 
-        if (point) {
-            return point;
+        if (position) {
+            return { side: 'right', position };
         }
 
-        return point;
+        return undefined;
     }
     
-    getNavMarkerPositionForSide(me: Player, flag: Flag, side: Vector[], camera: Camera) {
+    getMarkerPositionForSide(me: Player, flag: Flag, side: Vector[], camera: Camera) {
         return this.getLineSegmentsIntersectionPoint(
             me.position, 
             flag.position,

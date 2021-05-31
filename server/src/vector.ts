@@ -51,4 +51,10 @@ export class Vector {
         a.y *= scalar;
         return a;
     }
+
+    distanceFrom(v: Vector): number {
+        const distanceX = this.x - v.x;
+        const distanceY = this.y - v.y;
+        return Math.sqrt(distanceX * distanceX + distanceY * distanceY);
+    }
 }

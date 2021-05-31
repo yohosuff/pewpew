@@ -122,15 +122,8 @@ function handleCollisions() {
 
 // we should use a collidable interface here or something...
 function areColliding(a: Player | Flag, b: Player | Flag) {
-  const distance = getDistanceBetweenPoints(a.position, b.position);
+  const distance = a.position.distanceFrom(b.position);
   return distance <= a.radius + b.radius;
-}
-
-function getDistanceBetweenPoints(a: Vector, b: Vector) {
-  const distanceX = a.x - b.x;
-  const distanceY = a.y - b.y;
-  const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
-  return distance;
 }
 
 function collideElastically(a: Player, b: Player) {
@@ -143,7 +136,7 @@ function collideElastically(a: Player, b: Player) {
 
 // https://github.com/OneLoneCoder/videos/blob/master/OneLoneCoder_Balls1.cpp
 function separateCollidees(a: Player, b: Player) {
-  const distance = getDistanceBetweenPoints(a.position, b.position);
+  const distance = a.position.distanceFrom(b.position);
   const overlap = 0.5 * (distance - a.radius - b.radius);
   a.position.x -= overlap * (a.position.x - b.position.x) / distance;
   a.position.y -= overlap * (a.position.y - b.position.y) / distance;

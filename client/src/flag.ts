@@ -36,11 +36,12 @@ export class Flag {
     
     context.fillStyle = 'black';
     context.textAlign = 'center';
-    context.font = "12px Arial";
+    const fontSize = 12;
+    context.font = `${fontSize}px Arial`;
     context.fillText(
       `FLAG`,
       camera.getScreenX(this.position),
-      camera.getScreenY(this.position),
+      camera.getScreenY(this.position) + fontSize / 2,
     );
     
   }
