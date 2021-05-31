@@ -17,6 +17,7 @@ import { Star } from './star';
 import { Flag } from './flag';
 import { Flag as ServerFlag } from "../../server/src/flag";
 import { Vector } from '../../server/src/vector';
+import { Navigation } from './navigation';
 
 const camera = new Camera();
 const players = new Map<string, Player>();
@@ -30,6 +31,7 @@ const socket = initializeSocket();
 const input = new Input();
 const stars = Star.generateStars(5000, -10000, 10000);
 const flag = new Flag();
+const navigation = new Navigation();
 
 input.inputChange.subscribe(input => {
     socket.emit(EventName.INPUT, input);
@@ -101,66 +103,7 @@ function draw() {
         .filter(drawable => camera.canSee(drawable))
         .forEach(drawable => drawable.draw(context, camera));
 
-    drawLineToFlag();
-}
-
-function drawLineToFlag() {
-    
-    //this is only the top right now... need to do left, right, and bottom of screen next
-    const intersectionPoint = getLineSegmentsIntersectionPoint(
-        me.position, 
-        flag.position,
-        camera.getWorldPosition(new Vector(0,0)),
-        camera.getWorldPosition(new Vector(window.innerWidth, 0)),
-    );
-
-    if(intersectionPoint) {
-        context.fillStyle = 'white';
-        context.beginPath();
-        context.arc(
-            camera.getScreenX(intersectionPoint),
-            camera.getScreenY(intersectionPoint),
-            25, 0, 2 * Math.PI,
-        );
-        context.fill();
-    }
-    
-    context.strokeStyle = 'red';
-    context.beginPath();
-    context.moveTo(
-        camera.getScreenX(me.position),
-        camera.getScreenY(me.position),
-    );
-    context.lineTo(
-        camera.getScreenX(flag.position),
-        camera.getScreenY(flag.position),
-    );
-    context.stroke();
-}
-
-//https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
-function getLineSegmentsIntersectionPoint(p: Vector, p2: Vector, q: Vector, q2: Vector) {
-    const r = p2.subtract(p);
-    const s = q2.subtract(q);
-    const uNumerator = q.subtract(p).crossProduct(r);
-    const denominator = r.crossProduct(s);
-    const collinear = uNumerator === 0 && denominator === 0;
-
-    if (collinear) { return; }
-
-    const parallel = denominator === 0;
-
-    if (parallel) { return; }
-
-    const u = uNumerator / denominator;
-    const t = q.subtract(p).crossProduct(s) / denominator;
-    const intersecting = (t >= 0) && (t <= 1) && (u >= 0) && (u <= 1);
-
-    if(!intersecting) { return; }
-
-    const intersection = p.add(r.multiplyByScalar(t));
-
-    return intersection;
+    navigation.draw(context, camera, me, flag);
 }
 
 function resize() {
