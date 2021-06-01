@@ -13,10 +13,8 @@ import { EventName } from '../../server/src/event-name';
 import { WelcomeDto } from '../../server/src/dtos/welcome-dto';
 import { io } from 'socket.io-client';
 import { Settings } from './settings';
-import { Star } from './star';
 import { Flag } from './flag';
 import { Flag as ServerFlag } from "../../server/src/flag";
-import { Vector } from '../../server/src/vector';
 import { Navigation } from './navigation';
 import { LeaderBoard } from './leader-board';
 
@@ -30,7 +28,6 @@ canvas.oncontextmenu = () => false;
 const context = canvas.getContext('2d');
 const socket = initializeSocket();
 const input = new Input();
-const stars = Star.generateStars(5000, -10000, 10000);
 const flag = new Flag();
 const navigation = new Navigation();
 const leaderBoard = new LeaderBoard();
@@ -101,7 +98,6 @@ function draw() {
 
     const drawables = [
         flag,
-        ...stars,
         ...Array.from(players.values()),
     ];
 
@@ -111,6 +107,9 @@ function draw() {
 
     navigation.draw(context, camera, me, flag);
     leaderBoard.draw(context, playersList);
+    
+    document.body.style.backgroundPositionX = `${-me.position.x}px`;
+    document.body.style.backgroundPositionY = `${-me.position.y}px`;
 }
 
 function resize() {
