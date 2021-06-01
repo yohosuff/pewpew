@@ -18,6 +18,7 @@ import { Flag } from './flag';
 import { Flag as ServerFlag } from "../../server/src/flag";
 import { Vector } from '../../server/src/vector';
 import { Navigation } from './navigation';
+import { LeaderBoard } from './leader-board';
 
 const camera = new Camera();
 const players = new Map<string, Player>();
@@ -32,6 +33,8 @@ const input = new Input();
 const stars = Star.generateStars(5000, -10000, 10000);
 const flag = new Flag();
 const navigation = new Navigation();
+const leaderBoard = new LeaderBoard();
+const playersList: Player[] = [];
 
 input.inputChange.subscribe(input => {
     socket.emit(EventName.INPUT, input);
@@ -49,6 +52,7 @@ function initializeSocket() {
         welcome.players.forEach(playerDto => {
             const player = Player.createFromPlayerDto(playerDto);
             players.set(player.id, player);
+            playersList.push(player);
         });
 
         me = players.get(welcome.id);
@@ -73,12 +77,14 @@ function initializeSocket() {
             newPlayer.id = joinedPlayer.id;
             newPlayer.color = joinedPlayer.color;
             players.set(newPlayer.id, newPlayer);
+            playersList.push(newPlayer);
             draw();
         });
 
         socket.on(EventName.PLAYER_LEFT, leftPlayer => {
             console.log(`player ${leftPlayer.id} left`);
-            players.delete(leftPlayer.id);
+            playersList.splice(playersList.indexOf(players.get(leftPlayer.id)), 1);
+            players.delete(leftPlayer.id);            
             draw();
         });
 
@@ -104,6 +110,7 @@ function draw() {
         .forEach(drawable => drawable.draw(context, camera));
 
     navigation.draw(context, camera, me, flag);
+    leaderBoard.draw(context, playersList);
 }
 
 function resize() {
