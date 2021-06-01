@@ -1,33 +1,10 @@
 import { Vector } from "../../server/src/vector";
 import { Camera } from "./camera";
 import { Flag } from "./flag";
+import { LineSegment } from "./line-segment";
 import { Player } from "./player";
 
 export class Navigation {
-
-    readonly left = 0;
-    readonly right = window.innerWidth;
-    readonly top = 0;
-    readonly bottom = window.innerHeight;
-
-    lineSegments = {
-        top: [
-            new Vector(this.left, this.top),
-            new Vector(this.right, this.top)
-        ],
-        bottom: [
-            new Vector(this.left, this.bottom),
-            new Vector(this.right, this.bottom)
-        ],
-        left: [
-            new Vector(this.left, this.top),
-            new Vector(this.left, this.bottom)
-        ],
-        right: [
-            new Vector(this.right, this.top),
-            new Vector(this.right, this.bottom)
-        ],
-    };
 
     textAlignMap: Map<string, CanvasTextAlign>;
     textOffsetMap: Map<string, Vector>;
@@ -65,7 +42,7 @@ export class Navigation {
         const markerPosition = this.getMarker(me, flag, camera);
         
         if(markerPosition) {
-                        
+
             //icon
             const iconOffset = this.iconOffsetMap.get(markerPosition.side);
             context.fillStyle = 'white';
@@ -104,25 +81,25 @@ export class Navigation {
     }
 
     getMarker(me: Player, flag: Flag, camera: Camera) {
-        let position = this.getMarkerPositionForSide(me, flag, this.lineSegments.top, camera);
+        let position = this.getMarkerPositionForSide(me, flag, camera.topBorder, camera);
 
         if (position) {
             return { side: 'top', position };
         }
 
-        position = this.getMarkerPositionForSide(me, flag, this.lineSegments.bottom, camera);
+        position = this.getMarkerPositionForSide(me, flag, camera.bottomBorder, camera);
 
         if (position) {
             return { side: 'bottom', position };
         }
 
-        position = this.getMarkerPositionForSide(me, flag, this.lineSegments.left, camera);
+        position = this.getMarkerPositionForSide(me, flag, camera.leftBorder, camera);
 
         if (position) {
             return { side: 'left', position };
         }
 
-        position = this.getMarkerPositionForSide(me, flag, this.lineSegments.right, camera);
+        position = this.getMarkerPositionForSide(me, flag, camera.rightBorder, camera);
 
         if (position) {
             return { side: 'right', position };
@@ -131,12 +108,12 @@ export class Navigation {
         return undefined;
     }
     
-    getMarkerPositionForSide(me: Player, flag: Flag, side: Vector[], camera: Camera) {
+    getMarkerPositionForSide(me: Player, flag: Flag, side: LineSegment, camera: Camera) {
         return this.getLineSegmentsIntersectionPoint(
             me.position, 
             flag.position,
-            camera.getWorldPosition(side[0]),
-            camera.getWorldPosition(side[1]),
+            camera.getWorldPosition(side.a),
+            camera.getWorldPosition(side.b),
         );
     }
     
