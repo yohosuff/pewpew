@@ -17,6 +17,7 @@ import { Flag } from './flag';
 import { Flag as ServerFlag } from "../../server/src/flag";
 import { Navigation } from './navigation';
 import { LeaderBoard } from './leader-board';
+import { Vector } from '../../server/src/vector';
 
 const camera = new Camera();
 const players = new Map<string, Player>();
@@ -110,6 +111,87 @@ function draw() {
     
     document.body.style.backgroundPositionX = `${-me.position.x}px`;
     document.body.style.backgroundPositionY = `${-me.position.y}px`;
+
+    drawEngineThrust();
+}
+
+// TODO: draw thrust for other players. add a player parameter, include player input on dto update from server
+function drawEngineThrust() {
+    const myScreenPosition = camera.getScreenPosition(me.position);
+    const flameLength = 100;
+    const flameWidth = 20;
+    const gradientPoint0 = new Vector(0, 0);
+    const gradientPoint1 = new Vector(0, 0);
+    const rectPosition = new Vector(0, 0);
+    let rectWidth: number;
+    let rectHeight: number;
+
+    if(input.left) {
+        gradientPoint0.x = myScreenPosition.x + me.radius;
+        gradientPoint0.y = myScreenPosition.y;
+        gradientPoint1.x = myScreenPosition.x + (me.radius + flameLength);
+        gradientPoint1.y = myScreenPosition.y;
+        rectPosition.x = myScreenPosition.x + me.radius;
+        rectPosition.y = myScreenPosition.y - flameWidth / 2;
+        rectWidth = flameLength;
+        rectHeight = flameWidth;
+        drawEngineThrustHelper(gradientPoint0, gradientPoint1, rectPosition, rectWidth, rectHeight);
+    }
+    
+    if(input.up) {
+        gradientPoint0.x = myScreenPosition.x;
+        gradientPoint0.y = myScreenPosition.y + me.radius;
+        gradientPoint1.x = myScreenPosition.x;
+        gradientPoint1.y = myScreenPosition.y + (me.radius + flameLength);
+        rectPosition.x = myScreenPosition.x - flameWidth / 2;
+        rectPosition.y = myScreenPosition.y + me.radius;
+        rectWidth = flameWidth;
+        rectHeight = flameLength;
+        drawEngineThrustHelper(gradientPoint0, gradientPoint1, rectPosition, rectWidth, rectHeight);
+    }
+    
+    if(input.right) {
+        gradientPoint0.x = myScreenPosition.x - me.radius;
+        gradientPoint0.y = myScreenPosition.y;
+        gradientPoint1.x = myScreenPosition.x - (me.radius + flameLength);
+        gradientPoint1.y = myScreenPosition.y;
+        rectPosition.x = myScreenPosition.x - (me.radius + flameLength);
+        rectPosition.y = myScreenPosition.y - flameWidth / 2;
+        rectWidth = flameLength;
+        rectHeight = flameWidth;
+        drawEngineThrustHelper(gradientPoint0, gradientPoint1, rectPosition, rectWidth, rectHeight);
+    }
+
+    if(input.down) {
+        gradientPoint0.x = myScreenPosition.x;
+        gradientPoint0.y = myScreenPosition.y - me.radius;
+        gradientPoint1.x = myScreenPosition.x;
+        gradientPoint1.y = myScreenPosition.y - (me.radius + flameLength);
+        rectPosition.x = myScreenPosition.x - flameWidth / 2;
+        rectPosition.y = myScreenPosition.y - (me.radius + flameLength);
+        rectWidth = flameWidth;
+        rectHeight = flameLength;
+        drawEngineThrustHelper(gradientPoint0, gradientPoint1, rectPosition, rectWidth, rectHeight);
+    }
+}
+
+function drawEngineThrustHelper(gradientPoint0: Vector, gradientPoint1: Vector, rectPosition: Vector, rectWidth: number, rectHeight: number) {
+    const linearGradient = context.createLinearGradient(
+        gradientPoint0.x,
+        gradientPoint0.y,
+        gradientPoint1.x,
+        gradientPoint1.y);
+
+    linearGradient.addColorStop(0, 'blue');
+    linearGradient.addColorStop(1, 'transparent');
+    context.fillStyle = linearGradient;
+
+    context.fillRect(
+        rectPosition.x,
+        rectPosition.y,
+        rectWidth,
+        rectHeight,
+    );
 }
 
 function resize() {

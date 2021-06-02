@@ -42,7 +42,7 @@ export class Player {
             context.textAlign = 'center';
             context.font = "12px Arial";
             context.fillText(
-                `${camera.getScreenVector(this).getString()}`,
+                `${camera.getScreenPosition(this.position).getString()}`,
                 camera.getScreenX(this.position),
                 camera.getScreenY(this.position),
             );

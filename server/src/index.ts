@@ -168,21 +168,25 @@ function handleInput() {
   Array.from(players.values()).forEach(player => {
     const input = player.input;
 
+    const acceleration = new Vector(0, 0);
+
     if (input.up) {
-      player.acceleration.y = -player.speed;
-    } else if (input.down) {
-      player.acceleration.y = player.speed;
-    } else {
-      player.acceleration.y = 0;
+      acceleration.y -= player.speed;
+    }
+
+    if (input.down) {
+      acceleration.y += player.speed;
     }
 
     if (input.left) {
-      player.acceleration.x = -player.speed;
-    } else if (input.right) {
-      player.acceleration.x = player.speed;
-    } else {
-      player.acceleration.x = 0;
+      acceleration.x -= player.speed;
     }
+    
+    if (input.right) {
+      acceleration.x += player.speed;
+    }
+
+    player.acceleration = acceleration;
   });
 }
 

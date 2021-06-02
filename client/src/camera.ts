@@ -69,10 +69,10 @@ export class Camera {
         return worldPosition;
     }
 
-    getScreenVector(drawable: any): Vector {
+    getScreenPosition(worldPosition: Vector): Vector {
         return new Vector(
-            this.getScreenX(drawable),
-            this.getScreenX(drawable),
+            this.getScreenX(worldPosition),
+            this.getScreenY(worldPosition),
         );
     }
 
