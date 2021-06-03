@@ -70,6 +70,8 @@ function initializeSocket() {
                 
                 player.position.x = updatedPlayer.position.x;
                 player.position.y = updatedPlayer.position.y;
+                player.velocity.x = updatedPlayer.velocity.x;
+                player.velocity.y = updatedPlayer.velocity.y;
                 
                 if(player.id !== me.id) {
                     player.input.left = updatedPlayer.input.left;

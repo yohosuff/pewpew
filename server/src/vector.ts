@@ -12,13 +12,19 @@ export class Vector {
         return Math.sqrt(this.x * this.x + this.y * this.y);
     }
 
+    static get ZERO(): Vector {
+        return new Vector(0, 0);
+    }
+
     getString(): string {
         return `${this.x.toFixed()} ${this.y.toFixed()}`;
     }
 
-    toUnitVector() {
-        this.x /= this.magnitude;
-        this.y /= this.magnitude;
+    getUnitVector() {
+        const unitVector = Vector.ZERO;
+        unitVector.x = this.x / this.magnitude;
+        unitVector.y = this.y / this.magnitude;
+        return unitVector
     }
 
     dotProduct(v: Vector): number {

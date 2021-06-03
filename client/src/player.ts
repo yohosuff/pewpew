@@ -9,6 +9,7 @@ export class Player {
     radius: number;
     color: string;
     input: Input;
+    velocity: Vector;
 
     debugging = false;
 
@@ -17,6 +18,7 @@ export class Player {
         this.position = new Vector(0, 0);
         this.radius = 50;
         this.input = new Input();
+        this.velocity = Vector.ZERO;
     }
 
     static createFromPlayerDto(playerDto: PlayerDto) {
@@ -31,7 +33,7 @@ export class Player {
     }
 
     draw(context: CanvasRenderingContext2D, camera: Camera) {
-        context.fillStyle = this.color;
+        context.fillStyle = this.color;        
         context.beginPath();
         context.arc(
             camera.getScreenX(this.position),
@@ -41,6 +43,7 @@ export class Player {
         context.fill();
 
         this.drawEngineThrust(context, camera);
+        this.drawSpeedArrow(context, camera);
 
         if(this.debugging) {
             context.fillStyle = 'white';
@@ -52,6 +55,39 @@ export class Player {
                 camera.getScreenY(this.position),
             );
         }
+    }
+
+    drawSpeedArrow(context: CanvasRenderingContext2D, camera: Camera) {
+        // speed
+        context.fillStyle = 'white';
+        context.textAlign = 'center';
+        context.font = "12px Arial";
+        const speed = this.velocity.magnitude / 100;
+        context.fillText(
+            `${speed.toFixed(1)} m/s`,
+            camera.getScreenX(this.position),
+            camera.getScreenY(this.position) + 30,
+        );
+
+        // arrow
+        const a = camera.getScreenPosition(this.position);
+        const b = a.add(this.velocity.getUnitVector().multiplyByScalar(15));
+        context.strokeStyle = 'white';
+        context.beginPath();
+        context.moveTo(a.x, a.y);
+        context.lineTo(b.x, b.y);
+        context.stroke();
+
+        //arrow origin
+        context.fillStyle = 'white'
+        context.beginPath();
+        context.arc(
+            camera.getScreenX(this.position),
+            camera.getScreenY(this.position),
+            3, 0, 2 * Math.PI,
+        );
+        context.fill();
+        
     }
 
     drawEngineThrust(context: CanvasRenderingContext2D, camera: Camera) {

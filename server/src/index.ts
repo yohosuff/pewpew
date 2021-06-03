@@ -95,6 +95,7 @@ function emitUpdate() {
     const playerUpdateDto = new PlayerUpdateDto();
     playerUpdateDto.id = player.id;
     playerUpdateDto.position = player.position;
+    playerUpdateDto.velocity = player.velocity;
     playerUpdateDto.input = player.input;
     return playerUpdateDto;
   });
