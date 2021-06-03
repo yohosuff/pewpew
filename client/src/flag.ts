@@ -20,11 +20,6 @@ export class Flag {
   }
 
   draw(context: CanvasRenderingContext2D, camera: Camera) {
-    
-    // could check what the screen x and y values are here, 
-    // and if they fall outside of the viewport just skip drawing them...
-    // probably would be a good base class method...
-    
     context.fillStyle = this.color;
     context.beginPath();
     context.arc(

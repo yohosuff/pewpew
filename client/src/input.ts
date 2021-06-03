@@ -14,6 +14,9 @@ export class Input {
         this.left = false;
         this.right = false;
         this.inputChange = new Subject<any>();
+    }
+
+    listenForKeyboardEvents() {
         window.addEventListener('keydown', this.keydown.bind(this));
         window.addEventListener('keyup', this.keyup.bind(this));
     }

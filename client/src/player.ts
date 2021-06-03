@@ -1,12 +1,14 @@
 import { PlayerDto } from "../../server/src/dtos/player-dto";
 import { Vector } from "../../server/src/vector";
 import { Camera } from "./camera";
+import { Input } from "./input";
 
 export class Player {
     id: string;
     position: Vector;
     radius: number;
     color: string;
+    input: Input;
 
     debugging = false;
 
@@ -14,6 +16,7 @@ export class Player {
         this.color = color;
         this.position = new Vector(0, 0);
         this.radius = 50;
+        this.input = new Input();
     }
 
     static createFromPlayerDto(playerDto: PlayerDto) {
@@ -37,6 +40,8 @@ export class Player {
         );
         context.fill();
 
+        this.drawEngineThrust(context, camera);
+
         if(this.debugging) {
             context.fillStyle = 'white';
             context.textAlign = 'center';
@@ -47,6 +52,91 @@ export class Player {
                 camera.getScreenY(this.position),
             );
         }
+    }
+
+    drawEngineThrust(context: CanvasRenderingContext2D, camera: Camera) {
+        const screenPosition = camera.getScreenPosition(this.position);
+        const flameLength = 100;
+        const flameWidth = 20;
+        const gradientPoint0 = new Vector(0, 0);
+        const gradientPoint1 = new Vector(0, 0);
+        const rectPosition = new Vector(0, 0);
+        let rectWidth: number;
+        let rectHeight: number;
+
+        if (this.input.left) {
+            gradientPoint0.x = screenPosition.x + this.radius;
+            gradientPoint0.y = screenPosition.y;
+            gradientPoint1.x = screenPosition.x + (this.radius + flameLength);
+            gradientPoint1.y = screenPosition.y;
+            rectPosition.x = screenPosition.x + this.radius;
+            rectPosition.y = screenPosition.y - flameWidth / 2;
+            rectWidth = flameLength;
+            rectHeight = flameWidth;
+            this.drawEngineThrustHelper(context, gradientPoint0, gradientPoint1, rectPosition, rectWidth, rectHeight);
+        }
+
+        if (this.input.up) {
+            gradientPoint0.x = screenPosition.x;
+            gradientPoint0.y = screenPosition.y + this.radius;
+            gradientPoint1.x = screenPosition.x;
+            gradientPoint1.y = screenPosition.y + (this.radius + flameLength);
+            rectPosition.x = screenPosition.x - flameWidth / 2;
+            rectPosition.y = screenPosition.y + this.radius;
+            rectWidth = flameWidth;
+            rectHeight = flameLength;
+            this.drawEngineThrustHelper(context, gradientPoint0, gradientPoint1, rectPosition, rectWidth, rectHeight);
+        }
+
+        if (this.input.right) {
+            gradientPoint0.x = screenPosition.x - this.radius;
+            gradientPoint0.y = screenPosition.y;
+            gradientPoint1.x = screenPosition.x - (this.radius + flameLength);
+            gradientPoint1.y = screenPosition.y;
+            rectPosition.x = screenPosition.x - (this.radius + flameLength);
+            rectPosition.y = screenPosition.y - flameWidth / 2;
+            rectWidth = flameLength;
+            rectHeight = flameWidth;
+            this.drawEngineThrustHelper(context, gradientPoint0, gradientPoint1, rectPosition, rectWidth, rectHeight);
+        }
+
+        if (this.input.down) {
+            gradientPoint0.x = screenPosition.x;
+            gradientPoint0.y = screenPosition.y - this.radius;
+            gradientPoint1.x = screenPosition.x;
+            gradientPoint1.y = screenPosition.y - (this.radius + flameLength);
+            rectPosition.x = screenPosition.x - flameWidth / 2;
+            rectPosition.y = screenPosition.y - (this.radius + flameLength);
+            rectWidth = flameWidth;
+            rectHeight = flameLength;
+            this.drawEngineThrustHelper(context, gradientPoint0, gradientPoint1, rectPosition, rectWidth, rectHeight);
+        }
+    }
+
+    drawEngineThrustHelper(
+        context: CanvasRenderingContext2D, 
+        gradientPoint0: Vector, 
+        gradientPoint1: Vector, 
+        rectPosition: Vector, 
+        rectWidth: number, 
+        rectHeight: number
+    ) {
+        const linearGradient = context.createLinearGradient(
+            gradientPoint0.x,
+            gradientPoint0.y,
+            gradientPoint1.x,
+            gradientPoint1.y);
+
+        linearGradient.addColorStop(0, 'blue');
+        linearGradient.addColorStop(1, 'transparent');
+        context.fillStyle = linearGradient;
+
+        context.fillRect(
+            rectPosition.x,
+            rectPosition.y,
+            rectWidth,
+            rectHeight,
+        );
     }
 
     getPositionString() {

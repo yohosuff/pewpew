@@ -7,6 +7,7 @@ import { Settings } from './settings';
 import express from 'express';
 import { Flag } from './flag';
 import { WelcomeDto } from './dtos/welcome-dto';
+import { PlayerUpdateDto } from './dtos/player-update-dto';
 
 const app = express();
 const httpServer = createServer(app);
@@ -90,13 +91,14 @@ function update(delta: number) {
 }
 
 function emitUpdate() {
-  const playersArray = Array.from(players.values()).map(player => {
-    return {
-      id: player.id,
-      position: player.position,
-    }; // this should be a DTO shared between the client and server
+  const playerUpdateDtos = Array.from(players.values()).map(player => {
+    const playerUpdateDto = new PlayerUpdateDto();
+    playerUpdateDto.id = player.id;
+    playerUpdateDto.position = player.position;
+    playerUpdateDto.input = player.input;
+    return playerUpdateDto;
   });
-  io.emit(EventName.UPDATE, playersArray);
+  io.emit(EventName.UPDATE, playerUpdateDtos);
 }
 
 function handleCollisions() {
