@@ -157,15 +157,18 @@ export class Player {
         rectWidth: number, 
         rectHeight: number
     ) {
-        const linearGradient = context.createLinearGradient(
+        const gradient = context.createRadialGradient(
             gradientPoint0.x,
             gradientPoint0.y,
+            10,
             gradientPoint1.x,
-            gradientPoint1.y);
+            gradientPoint1.y,
+            3);
 
-        linearGradient.addColorStop(0, 'blue');
-        linearGradient.addColorStop(1, 'transparent');
-        context.fillStyle = linearGradient;
+        gradient.addColorStop(0, 'rgba(0,0,255,1)');
+        gradient.addColorStop(1, 'rgba(0,0,255,0)');
+        
+        context.fillStyle = gradient;
 
         context.fillRect(
             rectPosition.x,
