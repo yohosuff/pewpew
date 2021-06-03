@@ -80,10 +80,10 @@ export class Camera {
         const x = this.getScreenX(drawable.position);
         const y = this.getScreenY(drawable.position);
 
-        if(x < 0) return false;
-        if(y < 0) return false;
-        if(x > window.innerWidth) return false;
-        if(y > window.innerHeight) return false;
+        if(x < -drawable.radius) return false;
+        if(y < -drawable.radius) return false;
+        if(x > window.innerWidth + drawable.radius) return false;
+        if(y > window.innerHeight + drawable.radius) return false;
 
         return true;
     }

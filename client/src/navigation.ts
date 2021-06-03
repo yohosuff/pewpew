@@ -11,7 +11,7 @@ export class Navigation {
     iconOffsetMap: Map<string, Vector>;
 
     static readonly ICON_OFFSET = 15;
-    static readonly TEXT_OFFSET = 40;
+    static readonly TEXT_OFFSET = 50;
 
     constructor() {
         this.textAlignMap = new Map<string, CanvasTextAlign>();
@@ -60,19 +60,26 @@ export class Navigation {
             context.textAlign = 'center';
             context.fillText(`F`, iconScreenXClamped, iconScreenYClamped + 7);
             
-            this.drawText(context, camera, me, flag, markerPosition);
+            this.drawText(context, camera, me, flag, markerPosition, iconOffset);
         }
     }
 
-    drawText(context: CanvasRenderingContext2D, camera: Camera, me: Player, flag: Flag, markerPosition: { side: any; position: any; }) {
+    drawText(
+        context: CanvasRenderingContext2D, 
+        camera: Camera, 
+        me: Player, 
+        flag: Flag, 
+        markerPosition: { side: any; position: any; }, 
+        iconOffset: Vector
+    ) {
         const textOffset = this.textOffsetMap.get(markerPosition.side);
         context.fillStyle = 'red';
         const fontSize = 12;
         context.font = `${fontSize}px Arial`;
         context.textAlign = this.textAlignMap.get(markerPosition.side);
         const distance = me.position.distanceFrom(flag.position) / 100;
-        const textScreenX = camera.getScreenX(markerPosition.position) + textOffset.x;
-        const textScreenY = camera.getScreenY(markerPosition.position) + textOffset.y;
+        const textScreenX = camera.getScreenX(markerPosition.position) + iconOffset.x + textOffset.x;
+        const textScreenY = camera.getScreenY(markerPosition.position) + iconOffset.y + textOffset.y;
         context.fillText(
             `${distance.toFixed(1)} m`,
             this.clamp(textScreenX, Navigation.ICON_OFFSET, window.innerWidth - Navigation.ICON_OFFSET),
@@ -81,25 +88,26 @@ export class Navigation {
     }
 
     getMarker(me: Player, flag: Flag, camera: Camera) {
-        let position = this.getMarkerPositionForSide(me, flag, camera.topBorder, camera);
+        const r = flag.radius;
+        let position = this.getMarkerPositionForSide(me, flag, camera.topBorder.applyOffset(-r, -r, +r, -r), camera);
 
         if (position) {
             return { side: 'top', position };
         }
 
-        position = this.getMarkerPositionForSide(me, flag, camera.bottomBorder, camera);
+        position = this.getMarkerPositionForSide(me, flag, camera.bottomBorder.applyOffset(-r, +r, +r, +r), camera);
 
         if (position) {
             return { side: 'bottom', position };
         }
 
-        position = this.getMarkerPositionForSide(me, flag, camera.leftBorder, camera);
+        position = this.getMarkerPositionForSide(me, flag, camera.leftBorder.applyOffset(-r, -r, -r, +r), camera);
 
         if (position) {
             return { side: 'left', position };
         }
 
-        position = this.getMarkerPositionForSide(me, flag, camera.rightBorder, camera);
+        position = this.getMarkerPositionForSide(me, flag, camera.rightBorder.applyOffset(+r, -r, +r, +r), camera);
 
         if (position) {
             return { side: 'right', position };

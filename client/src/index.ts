@@ -4,6 +4,7 @@
 //do 'king of the hill' where the 'hill' is a cirular area that randomly relocates and players try to bash each other out of it
 //the flag should try to run away from the players
 //infect other players with control virus that randomizes their controls
+//players try to 'kick' a ball into the other team's 'net'
 
 import './index.css';
 

@@ -44,6 +44,4 @@ export class Flag {
   getPositionString() {
     return `${this.position.x.toFixed()} ${this.position.y.toFixed()}`;
   }
-
-
 }
