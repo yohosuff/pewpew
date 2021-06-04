@@ -24,11 +24,7 @@ import { io } from 'socket.io-client';
 
 const camera = new Camera();
 const players = new Map<string, Player>();
-const canvas = document.createElement('canvas');
-document.body.appendChild(canvas);
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-canvas.oncontextmenu = () => false;
+const canvas = createCanvas();
 const context = canvas.getContext('2d');
 const flag = new Flag();
 const navigation = new Navigation();
@@ -40,6 +36,15 @@ let me: Player;
 window.addEventListener('resize', resize);
 
 initializeSocket();
+
+function createCanvas() {
+    const canvas = document.createElement('canvas');
+    document.body.appendChild(canvas);
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    canvas.oncontextmenu = () => false;
+    return canvas;
+}
 
 function initializeSocket() {
     const socket = io(Settings.SERVER);
