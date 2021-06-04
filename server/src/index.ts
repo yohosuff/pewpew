@@ -25,16 +25,9 @@ const flag = new Flag();
 io.on('connection', socket => {
 
   console.log('connection', socket.id);
-
-  const color = "#" + Math.floor(Math.random() * 16777215).toString(16);
-  const player = new Player(color);
-  player.id = socket.id;
-  player.socket = socket;
-  player.position = new Vector(
-    Math.floor(Math.random() * 1000 - 500),
-    Math.floor(Math.random() * 1000 - 500),
-  );
-  players.set(socket.id, player);
+  
+  const player = new Player(socket);
+  players.set(player.id, player);
 
   socket.on(EventName.INPUT, input => {
     player.input = input;

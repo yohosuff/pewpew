@@ -46,15 +46,39 @@ function createCanvas() {
     return canvas;
 }
 
+function addPlayer(player: Player) {
+    if(players.has(player.id)) { 
+        removePlayer(player.id);
+    }
+    players.set(player.id, player);
+    playersList.push(player);
+}
+
+function removePlayer(playerId: string) {
+    const player = players.get(playerId);
+    const index = playersList.indexOf(player);
+    playersList.splice(index, 1);
+    players.delete(playerId);
+}
+
+function removeAllPlayers() {
+    playersList.splice(0, playersList.length);
+    players.clear();
+}
+
 function initializeSocket() {
     const socket = io(Settings.SERVER);
 
     socket.on(EventName.WELCOME, (welcome: WelcomeDto) => {
 
+        console.log('welcome');
+        
+        removeAllPlayers();
+
         welcome.players.forEach(playerDto => {
+            console.log(`joining existing player: ${playerDto.id}`);
             const player = Player.createFromPlayerDto(playerDto);
-            players.set(player.id, player);
-            playersList.push(player);
+            addPlayer(player);
         });
 
         me = players.get(welcome.id);
@@ -67,52 +91,75 @@ function initializeSocket() {
         camera.follow(me);
         draw();
 
-        socket.on(EventName.UPDATE, (updatedPlayers: PlayerUpdateDto[]) => {
-            updatedPlayers.forEach(updatedPlayer => {
-                const player = players.get(updatedPlayer.id);
-                
-                if (!player) { return; }
-                
-                player.position.x = updatedPlayer.position.x;
-                player.position.y = updatedPlayer.position.y;
-                player.velocity.x = updatedPlayer.velocity.x;
-                player.velocity.y = updatedPlayer.velocity.y;
-                
-                if(player.id !== me.id) {
-                    player.input.left = updatedPlayer.input.left;
-                    player.input.right = updatedPlayer.input.right;
-                    player.input.up = updatedPlayer.input.up;
-                    player.input.down = updatedPlayer.input.down;
-                }
-            });
-            camera.follow(me);
-            draw();
-        });
+        //register these event handlers in a map, and use a helper function to do an 'auto on/off' subscription thing...
+        socket.off(EventName.UPDATE, updateHandler);
+        socket.on(EventName.UPDATE, updateHandler);
 
-        socket.on(EventName.PLAYER_JOINED, joinedPlayer => {
-            console.log(`player ${joinedPlayer.id} joined`);
-            const newPlayer = new Player('red');
-            newPlayer.id = joinedPlayer.id;
-            newPlayer.color = joinedPlayer.color;
-            players.set(newPlayer.id, newPlayer);
-            playersList.push(newPlayer);
-            draw();
-        });
+        socket.off(EventName.PLAYER_JOINED, playerJoinedHandler);
+        socket.on(EventName.PLAYER_JOINED, playerJoinedHandler);
 
-        socket.on(EventName.PLAYER_LEFT, leftPlayer => {
-            console.log(`player ${leftPlayer.id} left`);
-            playersList.splice(playersList.indexOf(players.get(leftPlayer.id)), 1);
-            players.delete(leftPlayer.id);            
-            draw();
-        });
+        socket.off(EventName.PLAYER_LEFT, playerLeftHandler);
+        socket.on(EventName.PLAYER_LEFT, playerLeftHandler);
 
-        socket.on(EventName.FLAG_UPDATE, (serverFlag: ServerFlag) => {
-            flag.update(serverFlag);
-        });
+        socket.off(EventName.FLAG_UPDATE, flagUpdateHandler);
+        socket.on(EventName.FLAG_UPDATE, flagUpdateHandler);
+
+        socket.off(EventName.DISCONNECT, disconnectHandler);
+        socket.on(EventName.DISCONNECT, disconnectHandler);
     });
 
     return socket;
 }
+
+const disconnectHandler = () => {
+    console.log('disconnect');
+    removeAllPlayers();
+    draw();
+};
+
+const flagUpdateHandler = (serverFlag: ServerFlag) => {
+    flag.update(serverFlag);
+};
+
+const playerLeftHandler = (leftPlayer: any) => {
+    console.log(`player left: ${leftPlayer.id}`);
+    removePlayer(leftPlayer.id);
+    draw();
+};
+
+const playerJoinedHandler = (joinedPlayer: any) => {
+    console.log(`player joined: ${joinedPlayer.id}`);
+    const newPlayer = new Player('red');
+    newPlayer.id = joinedPlayer.id;
+    newPlayer.color = joinedPlayer.color;
+    addPlayer(newPlayer);
+    draw();
+};
+
+const updateHandler = (updatedPlayers: PlayerUpdateDto[]) => {
+
+    //console.log('update');
+
+    updatedPlayers.forEach(updatedPlayer => {
+        const player = players.get(updatedPlayer.id);
+        
+        if (!player) { return; }
+        
+        player.position.x = updatedPlayer.position.x;
+        player.position.y = updatedPlayer.position.y;
+        player.velocity.x = updatedPlayer.velocity.x;
+        player.velocity.y = updatedPlayer.velocity.y;
+        
+        if(player.id !== me.id) {
+            player.input.left = updatedPlayer.input.left;
+            player.input.right = updatedPlayer.input.right;
+            player.input.up = updatedPlayer.input.up;
+            player.input.down = updatedPlayer.input.down;
+        }
+    });
+    camera.follow(me);
+    draw();
+};
 
 function draw() {
     context.clearRect(0, 0, canvas.width, canvas.height);

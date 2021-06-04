@@ -14,10 +14,15 @@ export class Player {
   socket: Socket;
   input: Input;
 
-  constructor(color: string) {
-    this.position = new Vector(0, 0);
+  constructor(socket: Socket) {
+    this.socket = socket;
+    this.id = socket.id;
+    this.position = new Vector(
+      Math.floor(Math.random() * 1000 - 500),
+      Math.floor(Math.random() * 1000 - 500),
+    );
     this.radius = 50;
-    this.color = color;
+    this.color = "#" + Math.floor(Math.random() * 16777215).toString(16);
     this.mass = 1;
     this.speed = 500;
     this.velocity = new Vector(0, 0);
