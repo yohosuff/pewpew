@@ -100,7 +100,7 @@ export class Player {
         let rectWidth: number;
         let rectHeight: number;
 
-        if (this.input.left) {
+        if (this.input.moveLeft.pressed) {
             gradientPoint0.x = screenPosition.x + this.radius;
             gradientPoint0.y = screenPosition.y;
             gradientPoint1.x = screenPosition.x + (this.radius + flameLength);
@@ -112,7 +112,7 @@ export class Player {
             this.drawEngineThrustHelper(context, gradientPoint0, gradientPoint1, rectPosition, rectWidth, rectHeight);
         }
 
-        if (this.input.up) {
+        if (this.input.moveUp.pressed) {
             gradientPoint0.x = screenPosition.x;
             gradientPoint0.y = screenPosition.y + this.radius;
             gradientPoint1.x = screenPosition.x;
@@ -124,7 +124,7 @@ export class Player {
             this.drawEngineThrustHelper(context, gradientPoint0, gradientPoint1, rectPosition, rectWidth, rectHeight);
         }
 
-        if (this.input.right) {
+        if (this.input.moveRight.pressed) {
             gradientPoint0.x = screenPosition.x - this.radius;
             gradientPoint0.y = screenPosition.y;
             gradientPoint1.x = screenPosition.x - (this.radius + flameLength);
@@ -136,7 +136,7 @@ export class Player {
             this.drawEngineThrustHelper(context, gradientPoint0, gradientPoint1, rectPosition, rectWidth, rectHeight);
         }
 
-        if (this.input.down) {
+        if (this.input.moveDown.pressed) {
             gradientPoint0.x = screenPosition.x;
             gradientPoint0.y = screenPosition.y - this.radius;
             gradientPoint1.x = screenPosition.x;

@@ -21,6 +21,7 @@ import { EventName } from '../../server/src/event-name';
 import { Flag as ServerFlag } from "../../server/src/flag";
 
 import { io } from 'socket.io-client';
+import { IMenuState } from './menu-state-interface';
 
 const camera = new Camera();
 const players = new Map<string, Player>();
@@ -83,8 +84,15 @@ function initializeSocket() {
 
         me = players.get(welcome.id);
         me.input.listenForKeyboardEvents();
-        me.input.inputChange.subscribe(input => {
+        me.input.movementChange.subscribe(input => {
             socket.emit(EventName.INPUT, input);
+        });
+
+        me.input.menuChange.subscribe((state: IMenuState) => {
+            if(state.setName) {
+                console.log('user wants to set their name');
+
+            }
         });
         
         flag.update(welcome.flag);
@@ -151,10 +159,10 @@ const updateHandler = (updatedPlayers: PlayerUpdateDto[]) => {
         player.velocity.y = updatedPlayer.velocity.y;
         
         if(player.id !== me.id) {
-            player.input.left = updatedPlayer.input.left;
-            player.input.right = updatedPlayer.input.right;
-            player.input.up = updatedPlayer.input.up;
-            player.input.down = updatedPlayer.input.down;
+            player.input.moveLeft.pressed = updatedPlayer.input.left;
+            player.input.moveRight.pressed = updatedPlayer.input.right;
+            player.input.moveUp.pressed = updatedPlayer.input.up;
+            player.input.moveDown.pressed = updatedPlayer.input.down;
         }
     });
     camera.follow(me);
