@@ -3,14 +3,14 @@ import { Input } from "./input";
 import { Vector } from "./vector";
 
 export class Player {
-  position: Vector;
+  id: string;
+  name: string;  position: Vector;
   radius: number;
   color: string;
   mass: number;
   speed: number;
   velocity: Vector;
   acceleration: Vector;
-  id: string;
   socket: Socket;
   input: Input;
 

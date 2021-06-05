@@ -29,6 +29,14 @@ io.on('connection', socket => {
   const player = new Player(socket);
   players.set(player.id, player);
 
+  socket.on(EventName.CHANGE_NAME, name => {
+    player.name = name;
+    io.emit(EventName.PLAYER_NAME_CHANGE, {
+      id: player.id,
+      name: player.name,
+    });
+  });
+
   socket.on(EventName.INPUT, input => {
     player.input = input;
   });

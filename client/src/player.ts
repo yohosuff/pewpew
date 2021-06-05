@@ -5,13 +5,12 @@ import { Input } from "./input";
 
 export class Player {
     id: string;
+    name: string;
     position: Vector;
     radius: number;
     color: string;
     input: Input;
     velocity: Vector;
-
-    debugging = false;
 
     constructor(color: string) {
         this.color = color;
@@ -24,6 +23,7 @@ export class Player {
     static createFromPlayerDto(playerDto: PlayerDto) {
         const player = new Player(playerDto.color);
         player.id = playerDto.id;
+        player.name = playerDto.name;
         player.position = new Vector(
             playerDto.position.x,
             playerDto.position.y,
@@ -43,18 +43,31 @@ export class Player {
         context.fill();
 
         this.drawEngineThrust(context, camera);
-        this.drawSpeedArrow(context, camera);
+        //this.drawSpeedArrow(context, camera);
+        //this.drawScreenPosition(context, camera);
+        this.drawName(context, camera);
+    }
 
-        if(this.debugging) {
-            context.fillStyle = 'white';
-            context.textAlign = 'center';
-            context.font = "12px Arial";
-            context.fillText(
-                `${camera.getScreenPosition(this.position).getString()}`,
-                camera.getScreenX(this.position),
-                camera.getScreenY(this.position),
-            );
-        }
+    drawName(context: CanvasRenderingContext2D, camera: Camera) {
+        context.fillStyle = 'white';
+        context.textAlign = 'center';
+        context.font = "12px Arial";
+        context.fillText(
+            `${this.name ?? this.id}`,
+            camera.getScreenX(this.position),
+            camera.getScreenY(this.position),
+        );
+    }
+
+    drawScreenPosition(context: CanvasRenderingContext2D, camera: Camera) {
+        context.fillStyle = 'white';
+        context.textAlign = 'center';
+        context.font = "12px Arial";
+        context.fillText(
+            `${camera.getScreenPosition(this.position).getString()}`,
+            camera.getScreenX(this.position),
+            camera.getScreenY(this.position),
+        );
     }
 
     drawSpeedArrow(context: CanvasRenderingContext2D, camera: Camera) {
@@ -87,7 +100,6 @@ export class Player {
             3, 0, 2 * Math.PI,
         );
         context.fill();
-        
     }
 
     drawEngineThrust(context: CanvasRenderingContext2D, camera: Camera) {

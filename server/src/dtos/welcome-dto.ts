@@ -15,7 +15,8 @@ export class WelcomeDto {
         id: updatedPlayer.id,
         position: updatedPlayer.position,
         color: updatedPlayer.color,
-        radius: player.radius,
+        radius: updatedPlayer.radius,
+        name: updatedPlayer.name,
       };
     });
   }

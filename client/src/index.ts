@@ -14,6 +14,7 @@ import { Settings } from './settings';
 import { Flag } from './flag';
 import { Navigation } from './navigation';
 import { LeaderBoard } from './leader-board';
+import { IMenuState } from './menu-state-interface';
 
 import { WelcomeDto } from '../../server/src/dtos/welcome-dto';
 import { PlayerUpdateDto } from "../../server/src/dtos/player-update-dto";
@@ -21,7 +22,7 @@ import { EventName } from '../../server/src/event-name';
 import { Flag as ServerFlag } from "../../server/src/flag";
 
 import { io } from 'socket.io-client';
-import { IMenuState } from './menu-state-interface';
+import Swal from 'sweetalert2'
 
 const camera = new Camera();
 const players = new Map<string, Player>();
@@ -88,10 +89,30 @@ function initializeSocket() {
             socket.emit(EventName.INPUT, input);
         });
 
-        me.input.menuChange.subscribe((state: IMenuState) => {
+        const name = localStorage.getItem('name');
+        if(name) {
+            socket.emit(EventName.CHANGE_NAME, name);
+        }
+        
+        me.input.menuChange.subscribe(async (state: IMenuState) => {
             if(state.setName) {
-                console.log('user wants to set their name');
+                const { value: name } = await Swal.fire({
+                    title: 'What should we call you?',
+                    input: 'text',
+                    inputValue: me.name,
+                    inputAutoTrim: true,
+                    showCancelButton: true,
+                    inputValidator: (value) => {
+                        if (!value) {
+                            return 'You need to write something!'
+                        }
+                    }
+                });
 
+                if(name) {
+                    localStorage.setItem('name', name);
+                    socket.emit(EventName.CHANGE_NAME, name);
+                }
             }
         });
         
@@ -102,6 +123,9 @@ function initializeSocket() {
         //register these event handlers in a map, and use a helper function to do an 'auto on/off' subscription thing...
         socket.off(EventName.UPDATE, updateHandler);
         socket.on(EventName.UPDATE, updateHandler);
+
+        socket.off(EventName.PLAYER_NAME_CHANGE, playerNameChangeHandler);
+        socket.on(EventName.PLAYER_NAME_CHANGE, playerNameChangeHandler);
 
         socket.off(EventName.PLAYER_JOINED, playerJoinedHandler);
         socket.on(EventName.PLAYER_JOINED, playerJoinedHandler);
@@ -135,6 +159,13 @@ const playerLeftHandler = (leftPlayer: any) => {
     draw();
 };
 
+const playerNameChangeHandler = (playerDto: any) => {
+    console.log(`player name change: ${playerDto.id} -> ${playerDto.name}`);
+    const player = players.get(playerDto.id);
+    if (!player) { return; }
+    player.name = playerDto.name;
+};
+
 const playerJoinedHandler = (joinedPlayer: any) => {
     console.log(`player joined: ${joinedPlayer.id}`);
     const newPlayer = new Player('red');
@@ -145,9 +176,6 @@ const playerJoinedHandler = (joinedPlayer: any) => {
 };
 
 const updateHandler = (updatedPlayers: PlayerUpdateDto[]) => {
-
-    //console.log('update');
-
     updatedPlayers.forEach(updatedPlayer => {
         const player = players.get(updatedPlayer.id);
         

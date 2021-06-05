@@ -4,9 +4,9 @@ export class LeaderBoard {
     draw(context: CanvasRenderingContext2D, players: Player[]) {
         for(let i = 0; i < players.length; ++i) {
             const player = players[i];
-            context.fillStyle = 'red';
+            context.fillStyle = player.color;
             context.textAlign = 'left';
-            context.fillText(`${player.id}`, 0, (i+1) * 20);
+            context.fillText(`${player.name ?? player.id}`, 20, 20 + (i + 1) * 20);
         }
     }
 }

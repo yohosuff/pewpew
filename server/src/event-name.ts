@@ -6,4 +6,6 @@ export class EventName {
   static readonly PLAYER_LEFT = 'player left';
   static readonly PLAYER_JOINED = 'player joined';
   static readonly FLAG_UPDATE = 'FLAG_UPDATE';
+  static readonly CHANGE_NAME = 'CHANGE_NAME';
+  static readonly PLAYER_NAME_CHANGE = 'PLAYER_NAME_CHANGE';
 }
