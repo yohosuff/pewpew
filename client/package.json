@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "start": "webpack serve --host 0.0.0.0 --port 80 --open"
+    "start": "webpack serve --host 0.0.0.0 --port 80"
   },
   "devDependencies": {
     "css-loader": "^5.2.5",
