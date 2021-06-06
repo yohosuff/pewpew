@@ -133,17 +133,15 @@ function registerEventHandlers(socket: Socket) {
             
             if (!player) { return; }
             
-            player.position.x = updatedPlayer.position.x;
-            player.position.y = updatedPlayer.position.y;
-            player.velocity.x = updatedPlayer.velocity.x;
-            player.velocity.y = updatedPlayer.velocity.y;
+            player.position.assign(updatedPlayer.position);
+            player.velocity.assign(updatedPlayer.velocity);
+
+            if(player.id === me.id) { return; }
             
-            if(player.id !== me.id) {
-                player.input.moveLeft.pressed = updatedPlayer.input.left;
-                player.input.moveRight.pressed = updatedPlayer.input.right;
-                player.input.moveUp.pressed = updatedPlayer.input.up;
-                player.input.moveDown.pressed = updatedPlayer.input.down;
-            }
+            player.input.moveLeft.pressed = updatedPlayer.input.left;
+            player.input.moveRight.pressed = updatedPlayer.input.right;
+            player.input.moveUp.pressed = updatedPlayer.input.up;
+            player.input.moveDown.pressed = updatedPlayer.input.down;
         });
         camera.follow(me);
         draw();

@@ -16,6 +16,11 @@ export class Vector {
         return new Vector(0, 0);
     }
 
+    assign(v: Vector) {
+        this.x = v.x;
+        this.y = v.y;
+    }
+
     getString(): string {
         return `${this.x.toFixed()} ${this.y.toFixed()}`;
     }
