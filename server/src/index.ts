@@ -110,9 +110,7 @@ function handleCollisions() {
     for (let j = i + 1; j < playersArray.length; ++j) {
       const a = playersArray[i];
       const b = playersArray[j];
-
       if (!areColliding(a, b)) { continue; }
-
       collideElastically(a, b);
     }
   }
@@ -120,7 +118,7 @@ function handleCollisions() {
   for (const player of playersArray) {
     if (!areColliding(player, flag)) { continue; }
     flag.reposition();
-    io.emit(EventName.FLAG_UPDATE, flag);
+    io.emit(EventName.FLAG_CAPTURED, flag);
   }
 }
 

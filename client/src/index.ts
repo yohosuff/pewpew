@@ -21,7 +21,7 @@ import { PlayerUpdateDto } from "../../server/src/dtos/player-update-dto";
 import { EventName } from '../../server/src/event-name';
 import { Flag as ServerFlag } from "../../server/src/flag";
 
-import { io } from 'socket.io-client';
+import { io, Socket } from 'socket.io-client';
 import Swal from 'sweetalert2'
 
 const camera = new Camera();
@@ -32,6 +32,7 @@ const flag = new Flag();
 const navigation = new Navigation();
 const leaderBoard = new LeaderBoard();
 const playersList: Player[] = [];
+const eventHandlers = new Map<string,any>();
 
 let me: Player;
 
@@ -119,83 +120,78 @@ function initializeSocket() {
         flag.update(welcome.flag);
         camera.follow(me);
         draw();
-
-        //register these event handlers in a map, and use a helper function to do an 'auto on/off' subscription thing...
-        socket.off(EventName.UPDATE, updateHandler);
-        socket.on(EventName.UPDATE, updateHandler);
-
-        socket.off(EventName.PLAYER_NAME_CHANGE, playerNameChangeHandler);
-        socket.on(EventName.PLAYER_NAME_CHANGE, playerNameChangeHandler);
-
-        socket.off(EventName.PLAYER_JOINED, playerJoinedHandler);
-        socket.on(EventName.PLAYER_JOINED, playerJoinedHandler);
-
-        socket.off(EventName.PLAYER_LEFT, playerLeftHandler);
-        socket.on(EventName.PLAYER_LEFT, playerLeftHandler);
-
-        socket.off(EventName.FLAG_UPDATE, flagUpdateHandler);
-        socket.on(EventName.FLAG_UPDATE, flagUpdateHandler);
-
-        socket.off(EventName.DISCONNECT, disconnectHandler);
-        socket.on(EventName.DISCONNECT, disconnectHandler);
+        registerEventHandlers(socket);
     });
 
     return socket;
 }
 
-const disconnectHandler = () => {
-    console.log('disconnect');
-    removeAllPlayers();
-    draw();
-};
-
-const flagUpdateHandler = (serverFlag: ServerFlag) => {
-    flag.update(serverFlag);
-};
-
-const playerLeftHandler = (leftPlayer: any) => {
-    console.log(`player left: ${leftPlayer.id}`);
-    removePlayer(leftPlayer.id);
-    draw();
-};
-
-const playerNameChangeHandler = (playerDto: any) => {
-    console.log(`player name change: ${playerDto.id} -> ${playerDto.name}`);
-    const player = players.get(playerDto.id);
-    if (!player) { return; }
-    player.name = playerDto.name;
-};
-
-const playerJoinedHandler = (joinedPlayer: any) => {
-    console.log(`player joined: ${joinedPlayer.id}`);
-    const newPlayer = new Player('red');
-    newPlayer.id = joinedPlayer.id;
-    newPlayer.color = joinedPlayer.color;
-    addPlayer(newPlayer);
-    draw();
-};
-
-const updateHandler = (updatedPlayers: PlayerUpdateDto[]) => {
-    updatedPlayers.forEach(updatedPlayer => {
-        const player = players.get(updatedPlayer.id);
-        
-        if (!player) { return; }
-        
-        player.position.x = updatedPlayer.position.x;
-        player.position.y = updatedPlayer.position.y;
-        player.velocity.x = updatedPlayer.velocity.x;
-        player.velocity.y = updatedPlayer.velocity.y;
-        
-        if(player.id !== me.id) {
-            player.input.moveLeft.pressed = updatedPlayer.input.left;
-            player.input.moveRight.pressed = updatedPlayer.input.right;
-            player.input.moveUp.pressed = updatedPlayer.input.up;
-            player.input.moveDown.pressed = updatedPlayer.input.down;
-        }
+function registerEventHandlers(socket: Socket) {
+    registerEventHandler(socket, EventName.UPDATE, (updatedPlayers: PlayerUpdateDto[]) => {
+        updatedPlayers.forEach(updatedPlayer => {
+            const player = players.get(updatedPlayer.id);
+            
+            if (!player) { return; }
+            
+            player.position.x = updatedPlayer.position.x;
+            player.position.y = updatedPlayer.position.y;
+            player.velocity.x = updatedPlayer.velocity.x;
+            player.velocity.y = updatedPlayer.velocity.y;
+            
+            if(player.id !== me.id) {
+                player.input.moveLeft.pressed = updatedPlayer.input.left;
+                player.input.moveRight.pressed = updatedPlayer.input.right;
+                player.input.moveUp.pressed = updatedPlayer.input.up;
+                player.input.moveDown.pressed = updatedPlayer.input.down;
+            }
+        });
+        camera.follow(me);
+        draw();
     });
-    camera.follow(me);
-    draw();
-};
+    
+    registerEventHandler(socket, EventName.PLAYER_NAME_CHANGE, (playerDto: any) => {
+        console.log(`player name change: ${playerDto.id} -> ${playerDto.name}`);
+        const player = players.get(playerDto.id);
+        if (!player) { return; }
+        player.name = playerDto.name;
+    });
+    
+    registerEventHandler(socket, EventName.PLAYER_JOINED, (joinedPlayer: any) => {
+        console.log(`player joined: ${joinedPlayer.id}`);
+        const newPlayer = new Player('red');
+        newPlayer.id = joinedPlayer.id;
+        newPlayer.color = joinedPlayer.color;
+        addPlayer(newPlayer);
+        draw();
+    });
+
+    registerEventHandler(socket, EventName.PLAYER_LEFT, (leftPlayer: any) => {
+        console.log(`player left: ${leftPlayer.id}`);
+        removePlayer(leftPlayer.id);
+        draw();
+    });
+    
+    registerEventHandler(socket, EventName.FLAG_CAPTURED, (serverFlag: ServerFlag) => {
+        flag.update(serverFlag);
+    });
+
+    registerEventHandler(socket, EventName.DISCONNECT, () => {
+        console.log('disconnect');
+        removeAllPlayers();
+        draw();
+    });
+}
+
+function registerEventHandler(socket: Socket, event: string, handler: any) {
+    const existingHandler = eventHandlers.get(event);
+    
+    if(existingHandler) {
+        socket.off(event, existingHandler);
+    }
+    
+    eventHandlers.set(event, handler);
+    socket.on(event, handler);
+}
 
 function draw() {
     context.clearRect(0, 0, canvas.width, canvas.height);
