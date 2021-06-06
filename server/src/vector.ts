@@ -19,6 +19,7 @@ export class Vector {
     assign(v: Vector) {
         this.x = v.x;
         this.y = v.y;
+        return this;
     }
 
     getString(): string {

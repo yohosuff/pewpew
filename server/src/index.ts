@@ -8,6 +8,7 @@ import express from 'express';
 import { Flag } from './flag';
 import { WelcomeDto } from './dtos/welcome-dto';
 import { PlayerUpdateDto } from './dtos/player-update-dto';
+import { FlagCapturedDto } from './dtos/flag-captured-dto';
 
 const app = express();
 const httpServer = createServer(app);
@@ -50,7 +51,7 @@ io.on('connection', socket => {
     });
   });
 
-  const welcomeDto = new WelcomeDto(player, flag, players);
+  const welcomeDto = new WelcomeDto(player.id, flag, players);
   socket.emit(EventName.WELCOME, welcomeDto);
 
   socket.broadcast.emit(EventName.PLAYER_JOINED, {
@@ -117,8 +118,13 @@ function handleCollisions() {
 
   for (const player of playersArray) {
     if (!areColliding(player, flag)) { continue; }
+    player.score += 1;
     flag.reposition();
-    io.emit(EventName.FLAG_CAPTURED, flag);
+    io.emit(EventName.FLAG_CAPTURED, {
+      flag,
+      playerId: player.id,
+      playerScore: player.score,
+    } as FlagCapturedDto);
   }
 }
 

@@ -16,10 +16,10 @@ import { Navigation } from './navigation';
 import { LeaderBoard } from './leader-board';
 import { IMenuState } from './menu-state-interface';
 
+import { EventName } from '../../server/src/event-name';
 import { WelcomeDto } from '../../server/src/dtos/welcome-dto';
 import { PlayerUpdateDto } from "../../server/src/dtos/player-update-dto";
-import { EventName } from '../../server/src/event-name';
-import { Flag as ServerFlag } from "../../server/src/flag";
+import { FlagCapturedDto } from '../../server/src/dtos/flag-captured-dto';
 
 import { io, Socket } from 'socket.io-client';
 import Swal from 'sweetalert2'
@@ -72,29 +72,32 @@ function removeAllPlayers() {
 function initializeSocket() {
     const socket = io(Settings.SERVER);
 
-    socket.on(EventName.WELCOME, (welcome: WelcomeDto) => {
+    socket.on(EventName.WELCOME, (dto: WelcomeDto) => {
 
-        console.log('welcome');
+        console.log('welcome', dto);
         
         removeAllPlayers();
 
-        welcome.players.forEach(playerDto => {
+        dto.players.forEach(playerDto => {
             console.log(`joining existing player: ${playerDto.id}`);
             const player = Player.createFromPlayerDto(playerDto);
             addPlayer(player);
         });
 
-        me = players.get(welcome.id);
+        me = players.get(dto.id);
+
+        const name = localStorage.getItem('name');
+        
+        if(name) {
+            socket.emit(EventName.CHANGE_NAME, name);
+        }
+
         me.input.listenForKeyboardEvents();
+        
         me.input.movementChange.subscribe(input => {
             socket.emit(EventName.INPUT, input);
         });
 
-        const name = localStorage.getItem('name');
-        if(name) {
-            socket.emit(EventName.CHANGE_NAME, name);
-        }
-        
         me.input.menuChange.subscribe(async (state: IMenuState) => {
             if(state.setName) {
                 const { value: name } = await Swal.fire({
@@ -117,7 +120,7 @@ function initializeSocket() {
             }
         });
         
-        flag.update(welcome.flag);
+        flag.assign(dto.flag);
         camera.follow(me);
         draw();
         registerEventHandlers(socket);
@@ -169,8 +172,12 @@ function registerEventHandlers(socket: Socket) {
         draw();
     });
     
-    registerEventHandler(socket, EventName.FLAG_CAPTURED, (serverFlag: ServerFlag) => {
-        flag.update(serverFlag);
+    registerEventHandler(socket, EventName.FLAG_CAPTURED, (dto: FlagCapturedDto) => {
+        flag.assign(dto.flag);
+        const player = players.get(dto.playerId);
+        player.score = dto.playerScore;
+        playersList.sort((a,b) => b.score - a.score);
+        draw();
     });
 
     registerEventHandler(socket, EventName.DISCONNECT, () => {

@@ -13,7 +13,7 @@ export class Flag {
     this.position = new Vector(0, 0);
   }
 
-  update(flag: ServerFlag) {
+  assign(flag: ServerFlag) {
     this.position.x = flag.position.x;
     this.position.y = flag.position.y;
     this.radius = flag.radius;

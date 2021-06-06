@@ -7,16 +7,17 @@ export class WelcomeDto {
   flag: Flag;
   players: PlayerDto[];
 
-  constructor(player: Player, flag: Flag, players: Map<string, Player>) {
-    this.id = player.id;
+  constructor(playerId: string, flag: Flag, players: Map<string, Player>) {
+    this.id = playerId;
     this.flag = flag;
-    this.players = Array.from(players.values()).map(updatedPlayer => {
+    this.players = Array.from(players.values()).map(player => {
       return {
-        id: updatedPlayer.id,
-        position: updatedPlayer.position,
-        color: updatedPlayer.color,
-        radius: updatedPlayer.radius,
-        name: updatedPlayer.name,
+        id: player.id,
+        position: player.position,
+        color: player.color,
+        radius: player.radius,
+        name: player.name,
+        score: player.score,
       };
     });
   }

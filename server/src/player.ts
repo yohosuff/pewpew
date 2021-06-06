@@ -13,6 +13,7 @@ export class Player {
   acceleration: Vector;
   socket: Socket;
   input: Input;
+  score: number;
 
   constructor(socket: Socket) {
     this.socket = socket;
@@ -28,5 +29,6 @@ export class Player {
     this.velocity = new Vector(0, 0);
     this.acceleration = new Vector(0, 0);
     this.input = new Input();
+    this.score = 0;
   }
 }

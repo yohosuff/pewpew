@@ -6,4 +6,5 @@ export class PlayerDto {
   position: Vector;
   color: string;
   radius: number;
+  score: number;
 }

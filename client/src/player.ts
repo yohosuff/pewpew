@@ -3,6 +3,7 @@ import { Vector } from "../../server/src/vector";
 import { Camera } from "./camera";
 import { Input } from "./input";
 
+// client and server should share this class
 export class Player {
     id: string;
     name: string;
@@ -11,24 +12,24 @@ export class Player {
     color: string;
     input: Input;
     velocity: Vector;
+    score: number;
 
     constructor(color: string) {
         this.color = color;
-        this.position = new Vector(0, 0);
+        this.position = Vector.ZERO;
         this.radius = 50;
         this.input = new Input();
         this.velocity = Vector.ZERO;
+        this.score = 0;
     }
 
-    static createFromPlayerDto(playerDto: PlayerDto) {
-        const player = new Player(playerDto.color);
-        player.id = playerDto.id;
-        player.name = playerDto.name;
-        player.position = new Vector(
-            playerDto.position.x,
-            playerDto.position.y,
-        );
-        player.radius = playerDto.radius;
+    static createFromPlayerDto(dto: PlayerDto) {
+        const player = new Player(dto.color);
+        player.id = dto.id;
+        player.name = dto.name;
+        player.position.assign(dto.position);
+        player.radius = dto.radius;
+        player.score = dto.score;
         return player;
     }
 
