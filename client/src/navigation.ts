@@ -1,17 +1,17 @@
 import { Vector } from "../../server/src/vector";
 import { Camera } from "./camera";
-import { Flag } from "./flag";
 import { LineSegment } from "./line-segment";
+import { IMarker } from "./marker-interface";
 import { Player } from "./player";
 
 export class Navigation {
 
     textAlignMap: Map<string, CanvasTextAlign>;
-    textOffsetMap: Map<string, Vector>;
-    iconOffsetMap: Map<string, Vector>;
+    textOffsetDirectionMap: Map<string, Vector>;
+    iconOffsetDirectionMap: Map<string, Vector>;
 
     static readonly ICON_OFFSET = 15;
-    static readonly TEXT_OFFSET = 50;
+    static readonly TEXT_OFFSET = 25;
 
     constructor() {
         this.textAlignMap = new Map<string, CanvasTextAlign>();
@@ -20,106 +20,127 @@ export class Navigation {
         this.textAlignMap.set('left', 'left');
         this.textAlignMap.set('right', 'right');
     
-        this.textOffsetMap = new Map<string, Vector>();
-        this.textOffsetMap.set('top', new Vector(0, Navigation.TEXT_OFFSET));
-        this.textOffsetMap.set('bottom', new Vector(0, -Navigation.TEXT_OFFSET));
-        this.textOffsetMap.set('left', new Vector(Navigation.TEXT_OFFSET, 0));
-        this.textOffsetMap.set('right', new Vector(-Navigation.TEXT_OFFSET, 0));
+        this.textOffsetDirectionMap = new Map<string, Vector>();
+        this.textOffsetDirectionMap.set('top', new Vector(0, 1));
+        this.textOffsetDirectionMap.set('bottom', new Vector(0, -1));
+        this.textOffsetDirectionMap.set('left', new Vector(1, 0));
+        this.textOffsetDirectionMap.set('right', new Vector(-1, 0));
 
-        this.iconOffsetMap = new Map<string, Vector>();
-        this.iconOffsetMap.set('top', new Vector(0, Navigation.ICON_OFFSET));
-        this.iconOffsetMap.set('bottom', new Vector(0, -Navigation.ICON_OFFSET));
-        this.iconOffsetMap.set('left', new Vector(Navigation.ICON_OFFSET, 0));
-        this.iconOffsetMap.set('right', new Vector(-Navigation.ICON_OFFSET, 0));
+        this.iconOffsetDirectionMap = new Map<string, Vector>();
+        this.iconOffsetDirectionMap.set('top', new Vector(0, 1));
+        this.iconOffsetDirectionMap.set('bottom', new Vector(0, -1));
+        this.iconOffsetDirectionMap.set('left', new Vector(1, 0));
+        this.iconOffsetDirectionMap.set('right', new Vector(-1, 0));
     }
 
-    clamp(number: number, min: number, max: number) {
-        return Math.min(Math.max(number, min), max);
+    getIconOffset(marker: IMarker) {
+        const iconOffsetDirection = this.iconOffsetDirectionMap.get(marker.intercept.side);
+        const offset = marker.radius + Navigation.ICON_OFFSET;
+        return iconOffsetDirection.multiplyByScalar(offset);
     }
 
-    draw(context: CanvasRenderingContext2D, camera: Camera, me: Player, flag: Flag) {
-    
-        const markerPosition = this.getMarker(me, flag, camera);
-        
-        if(markerPosition) {
+    getTextOffset(marker: IMarker) {
+        const textOffsetDirection = this.textOffsetDirectionMap.get(marker.intercept.side);
+        const offset = marker.radius + Navigation.ICON_OFFSET + Navigation.TEXT_OFFSET;
+        return textOffsetDirection.multiplyByScalar(offset);
+    }
 
-            //icon
-            const iconOffset = this.iconOffsetMap.get(markerPosition.side);
-            context.fillStyle = 'white';
-            context.beginPath();
-            const iconScreenX = camera.getScreenX(markerPosition.position) + iconOffset.x;
-            const iconScreenY = camera.getScreenY(markerPosition.position) + iconOffset.y;
-            const iconScreenXClamped = this.clamp(iconScreenX, Navigation.ICON_OFFSET, window.innerWidth - Navigation.ICON_OFFSET);
-            const iconScreenYClamped = this.clamp(iconScreenY, Navigation.ICON_OFFSET, window.innerHeight - Navigation.ICON_OFFSET);
-            context.arc(iconScreenXClamped, iconScreenYClamped, 12.5, 0, 2 * Math.PI);
-            context.fill();
-            
-            const fontSize = 18;
-            context.fillStyle = 'black'
-            context.font = `${fontSize}px Arial`;
-            context.textAlign = 'center';
-            context.fillText(`F`, iconScreenXClamped, iconScreenYClamped + 7);
-            
-            this.drawText(context, camera, me, flag, markerPosition, iconOffset);
+    draw(context: CanvasRenderingContext2D, camera: Camera, me: Player, markers: IMarker[]) {
+        markers.forEach(marker => {
+            this.drawMarker(context, camera, me, marker);
+        });
+    }
+
+    drawMarker(context: CanvasRenderingContext2D, camera: Camera, me: Player, marker: IMarker) {
+        this.setMarkerIntercept(me, marker, camera);
+        if(marker.intercept) {
+            this.drawIcon(context, camera, marker);
+            this.drawText(context, camera, marker, me);
         }
+    }
+
+    drawIcon(
+        context: CanvasRenderingContext2D,
+        camera: Camera,
+        marker: IMarker
+    ) {
+        const iconOffset = this.getIconOffset(marker);
+        context.fillStyle = marker.color;
+        context.beginPath();
+        const iconScreenX = camera.getScreenX(marker.intercept.position) + iconOffset.x;
+        const iconScreenY = camera.getScreenY(marker.intercept.position) + iconOffset.y;
+        const iconScreenXClamped = Navigation.clamp(iconScreenX, Navigation.ICON_OFFSET, window.innerWidth - Navigation.ICON_OFFSET);
+        const iconScreenYClamped = Navigation.clamp(iconScreenY, Navigation.ICON_OFFSET, window.innerHeight - Navigation.ICON_OFFSET);
+        context.arc(iconScreenXClamped, iconScreenYClamped, 12.5, 0, 2 * Math.PI);
+        context.fill();
+        
+        const fontSize = 18;
+        context.fillStyle = 'black'
+        context.font = `${fontSize}px Arial`;
+        context.textAlign = 'center';
+        
+        const symbol = marker.name || marker.id;
+        context.fillText(`${symbol.charAt(0).toUpperCase()}`, iconScreenXClamped, iconScreenYClamped + 7);
     }
 
     drawText(
-        context: CanvasRenderingContext2D, 
-        camera: Camera, 
-        me: Player, 
-        flag: Flag, 
-        markerPosition: { side: any; position: any; }, 
-        iconOffset: Vector
+        context: CanvasRenderingContext2D,
+        camera: Camera,
+        marker: IMarker,
+        me: Player,
     ) {
-        const textOffset = this.textOffsetMap.get(markerPosition.side);
+        const textOffset = this.getTextOffset(marker);
         context.fillStyle = 'red';
         const fontSize = 12;
         context.font = `${fontSize}px Arial`;
-        context.textAlign = this.textAlignMap.get(markerPosition.side);
-        const distance = me.position.distanceFrom(flag.position) / 100;
-        const textScreenX = camera.getScreenX(markerPosition.position) + iconOffset.x + textOffset.x;
-        const textScreenY = camera.getScreenY(markerPosition.position) + iconOffset.y + textOffset.y;
+        context.textAlign = this.textAlignMap.get(marker.intercept.side);
+        const distance = me.position.distanceFrom(marker.position) / 100;
+        const textScreenX = camera.getScreenX(marker.intercept.position) + textOffset.x;
+        const textScreenY = camera.getScreenY(marker.intercept.position) + textOffset.y;
         context.fillText(
             `${distance.toFixed(1)} m`,
-            this.clamp(textScreenX, Navigation.ICON_OFFSET, window.innerWidth - Navigation.ICON_OFFSET),
-            this.clamp(textScreenY, Navigation.ICON_OFFSET, window.innerHeight - Navigation.ICON_OFFSET) + fontSize / 2,
+            Navigation.clamp(textScreenX, Navigation.ICON_OFFSET, window.innerWidth - Navigation.ICON_OFFSET),
+            Navigation.clamp(textScreenY, Navigation.ICON_OFFSET, window.innerHeight - Navigation.ICON_OFFSET) + fontSize / 2,
         );
     }
 
-    getMarker(me: Player, flag: Flag, camera: Camera) {
-        const r = flag.radius;
-        let position = this.getMarkerPositionForSide(me, flag, camera.topBorder.applyOffset(-r, -r, +r, -r), camera);
+    setMarkerIntercept(me: Player, marker: IMarker, camera: Camera) {
+        marker.intercept = undefined;
+        const r = marker.radius;
+
+        let position = this.getMarkerPositionForSide(me, marker, camera.topBorder.applyOffset(-r, -r, +r, -r), camera);
 
         if (position) {
-            return { side: 'top', position };
+            marker.intercept = { side: 'top', position };
+            return;
         }
 
-        position = this.getMarkerPositionForSide(me, flag, camera.bottomBorder.applyOffset(-r, +r, +r, +r), camera);
+        position = this.getMarkerPositionForSide(me, marker, camera.bottomBorder.applyOffset(-r, +r, +r, +r), camera);
 
         if (position) {
-            return { side: 'bottom', position };
+            marker.intercept = { side: 'bottom', position };
+            return;
         }
 
-        position = this.getMarkerPositionForSide(me, flag, camera.leftBorder.applyOffset(-r, -r, -r, +r), camera);
+        position = this.getMarkerPositionForSide(me, marker, camera.leftBorder.applyOffset(-r, -r, -r, +r), camera);
 
         if (position) {
-            return { side: 'left', position };
+            marker.intercept = { side: 'left', position };
+            return;
         }
 
-        position = this.getMarkerPositionForSide(me, flag, camera.rightBorder.applyOffset(+r, -r, +r, +r), camera);
+        position = this.getMarkerPositionForSide(me, marker, camera.rightBorder.applyOffset(+r, -r, +r, +r), camera);
 
         if (position) {
-            return { side: 'right', position };
+            marker.intercept = { side: 'right', position };
+            return;
         }
-
-        return undefined;
     }
     
-    getMarkerPositionForSide(me: Player, flag: Flag, side: LineSegment, camera: Camera) {
+    getMarkerPositionForSide(me: Player, marker: IMarker, side: LineSegment, camera: Camera) {
         return this.getLineSegmentsIntersectionPoint(
             me.position, 
-            flag.position,
+            marker.position,
             camera.getWorldPosition(side.a),
             camera.getWorldPosition(side.b),
         );
@@ -148,5 +169,9 @@ export class Navigation {
         const intersection = p.add(r.multiplyByScalar(t));
     
         return intersection;
+    }
+
+    static clamp(number: number, min: number, max: number) {
+        return Math.min(Math.max(number, min), max);
     }
 }

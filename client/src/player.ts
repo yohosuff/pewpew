@@ -2,9 +2,10 @@ import { PlayerDto } from "../../server/src/dtos/player-dto";
 import { Vector } from "../../server/src/vector";
 import { Camera } from "./camera";
 import { Input } from "./input";
+import { IMarker } from "./marker-interface";
 
 // client and server should share this class
-export class Player {
+export class Player implements IMarker {
     id: string;
     name: string;
     position: Vector;

@@ -5,6 +5,8 @@
 //the flag should try to run away from the players
 //infect other players with control virus that randomizes their controls
 //players try to 'kick' a ball into the other team's 'net'
+//grappling other players and flinging them around would be fun
+//add toasts for certain events (player name changes, flag captures, players leaving/joining)
 
 import './index.css';
 
@@ -210,7 +212,8 @@ function draw() {
         .filter(drawable => camera.canSee(drawable))
         .forEach(drawable => drawable.draw(context, camera));
 
-    navigation.draw(context, camera, me, flag);
+    navigation.draw(context, camera, me, drawables);
+
     leaderBoard.draw(context, playersList);
     
     document.body.style.backgroundPositionX = `${-me.position.x}px`;

@@ -1,13 +1,16 @@
 import { Camera } from "./camera";
 import { Flag as ServerFlag } from "../../server/src/flag";
 import { Vector } from "../../server/src/vector";
+import { IMarker } from "./marker-interface";
 
-export class Flag {
+export class Flag implements IMarker {
+  name: string;
   position: Vector;
   radius: number;
   color: string;
 
   constructor() {
+    this.name = 'flag';
     this.color = 'white';
     this.radius = 25;
     this.position = new Vector(0, 0);
