@@ -17,6 +17,7 @@ import { Flag } from './flag';
 import { Navigation } from './navigation';
 import { LeaderBoard } from './leader-board';
 import { IMenuState } from './menu-state-interface';
+import { Wall } from './wall';
 
 import { EventName } from '../../server/src/event-name';
 import { WelcomeDto } from '../../server/src/dtos/welcome-dto';
@@ -35,6 +36,7 @@ const navigation = new Navigation();
 const leaderBoard = new LeaderBoard();
 const playersList: Player[] = [];
 const eventHandlers = new Map<string,any>();
+const walls: Wall[] = [];
 
 let me: Player;
 
@@ -79,6 +81,13 @@ function initializeSocket() {
         console.log('welcome', dto);
         
         removeAllPlayers();
+
+        walls.splice(0, walls.length);
+        const wall = new Wall();
+        wall.bounds = dto.wall.bounds;
+        wall.color = dto.wall.color;
+        wall.position = dto.wall.position;
+        walls.push(wall);
 
         dto.players.forEach(playerDto => {
             console.log(`joining existing player: ${playerDto.id}`);
@@ -140,6 +149,7 @@ function registerEventHandlers(socket: Socket) {
             
             player.position.assign(updatedPlayer.position);
             player.velocity.assign(updatedPlayer.velocity);
+            player.color = updatedPlayer.color;
 
             if(player.id === me.id) { return; }
             
@@ -213,6 +223,7 @@ function draw() {
         .forEach(drawable => drawable.draw(context, camera));
 
     navigation.draw(context, camera, me, drawables);
+    walls.forEach(wall => wall.draw(context, camera))
 
     leaderBoard.draw(context, playersList);
     

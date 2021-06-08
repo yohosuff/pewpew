@@ -1,15 +1,18 @@
 import { Player } from "../player";
 import { Flag } from "../flag";
 import { PlayerDto } from "./player-dto";
+import { Wall } from "../wall";
 
 export class WelcomeDto {
   id: string;
   flag: Flag;
   players: PlayerDto[];
+  wall: Wall;
 
-  constructor(playerId: string, flag: Flag, players: Map<string, Player>) {
+  constructor(playerId: string, flag: Flag, players: Map<string, Player>, wall: Wall) {
     this.id = playerId;
     this.flag = flag;
+    this.wall = wall;
     this.players = Array.from(players.values()).map(player => {
       return {
         id: player.id,

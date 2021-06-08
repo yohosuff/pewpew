@@ -6,4 +6,5 @@ export class PlayerUpdateDto {
   position: Vector;
   velocity: Vector;
   input: Input;
+  color: string;
 }

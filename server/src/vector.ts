@@ -1,5 +1,5 @@
 export class Vector {
-
+    
     x: number;
     y: number;
 
@@ -12,8 +12,23 @@ export class Vector {
         return Math.sqrt(this.x * this.x + this.y * this.y);
     }
 
+    get negative(): Vector {
+        return new Vector(-this.x, -this.y);
+    }
+
     static get ZERO(): Vector {
         return new Vector(0, 0);
+    }
+
+    clamp(min: Vector, max: Vector) {
+        return new Vector(
+            this.clampNumber(this.x, min.x, max.x),
+            this.clampNumber(this.y, min.y, max.y),
+        );
+    }
+
+    private clampNumber(number: number, min: number, max: number) {
+        return Math.min(Math.max(number, min), max);
     }
 
     assign(v: Vector) {
@@ -51,10 +66,10 @@ export class Vector {
     }
 
     add(b: Vector): Vector {
-        const a = new Vector(this.x, this.y);
-        a.x += b.x;
-        a.y += b.y;
-        return a;
+        return new Vector(
+            this.x + b.x,
+            this.y + b.y
+        );
     }
 
     multiplyByScalar(scalar: number): Vector {

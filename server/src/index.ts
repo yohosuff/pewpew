@@ -9,6 +9,7 @@ import { Flag } from './flag';
 import { WelcomeDto } from './dtos/welcome-dto';
 import { PlayerUpdateDto } from './dtos/player-update-dto';
 import { FlagCapturedDto } from './dtos/flag-captured-dto';
+import { Wall } from './wall';
 
 const app = express();
 const httpServer = createServer(app);
@@ -22,6 +23,7 @@ const io = new Server(httpServer, {
 
 const players = new Map<string, Player>();
 const flag = new Flag();
+const wall = new Wall();
 
 io.on('connection', socket => {
 
@@ -51,7 +53,8 @@ io.on('connection', socket => {
     });
   });
 
-  const welcomeDto = new WelcomeDto(player.id, flag, players);
+  
+  const welcomeDto = new WelcomeDto(player.id, flag, players, wall);
   socket.emit(EventName.WELCOME, welcomeDto);
 
   socket.broadcast.emit(EventName.PLAYER_JOINED, {
@@ -99,6 +102,7 @@ function emitUpdate() {
     playerUpdateDto.position = player.position;
     playerUpdateDto.velocity = player.velocity;
     playerUpdateDto.input = player.input;
+    playerUpdateDto.color = player.color;
     return playerUpdateDto;
   });
   io.emit(EventName.UPDATE, playerUpdateDtos);
@@ -107,6 +111,7 @@ function emitUpdate() {
 function handleCollisions() {
   const playersArray = Array.from(players.values());
 
+  //player <> player
   for (let i = 0; i < playersArray.length - 1; ++i) {
     for (let j = i + 1; j < playersArray.length; ++j) {
       const a = playersArray[i];
@@ -116,6 +121,7 @@ function handleCollisions() {
     }
   }
 
+  //player <> flag
   for (const player of playersArray) {
     if (!areColliding(player, flag)) { continue; }
     player.score += 1;
@@ -126,6 +132,28 @@ function handleCollisions() {
       playerScore: player.score,
     } as FlagCapturedDto);
   }
+
+  //player <> wall
+  for(const player of playersArray) {
+    if(!areCircleRectangleColliding(player, wall)) {
+      player.color = 'blue';
+      continue;
+    }
+    
+    player.color = 'red';
+
+    //consider this for resolving this type of collision
+    //https://learnopengl.com/In-Practice/2D-Game/Collisions/Collision-resolution
+  }
+}
+
+//https://gamedev.stackexchange.com/a/178154/151167
+//https://learnopengl.com/In-Practice/2D-Game/Collisions/Collision-Detection
+function areCircleRectangleColliding(player: Player, wall: Wall) {
+  const distance = player.position.subtract(wall.position);
+  const clampDistance = distance.clamp(wall.bounds.negative, wall.bounds);
+  const closestPoint = wall.position.add(clampDistance);
+  return closestPoint.subtract(player.position).magnitude < player.radius;
 }
 
 // we should use a collidable interface here or something...
