@@ -14,9 +14,10 @@ export class Flag {
   }
 
   reposition() {
+    const range = 900;
     this.position = new Vector(
-      this.getRandomNumber(-5000, 5000),
-      this.getRandomNumber(-5000, 5000),
+      this.getRandomNumber(-range, range),
+      this.getRandomNumber(-range, range),
     );
   }
 }

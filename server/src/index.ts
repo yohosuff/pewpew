@@ -23,7 +23,16 @@ const io = new Server(httpServer, {
 
 const players = new Map<string, Player>();
 const flag = new Flag();
-const wall = new Wall();
+
+const wallLength = 1000;
+const wallWidth = 20;
+const wallColor = 'red';
+const walls: Wall[] = [
+  new Wall(new Vector(-wallLength, 0), new Vector(wallWidth, wallLength + wallWidth), wallColor),
+  new Wall(new Vector(wallLength, 0), new Vector(wallWidth, wallLength + wallWidth), wallColor),
+  new Wall(new Vector(0, wallLength), new Vector(wallLength + wallWidth, wallWidth), wallColor),
+  new Wall(new Vector(0, -wallLength), new Vector(wallLength + wallWidth, wallWidth), wallColor),
+];
 
 io.on('connection', socket => {
 
@@ -54,7 +63,7 @@ io.on('connection', socket => {
   });
 
   
-  const welcomeDto = new WelcomeDto(player.id, flag, players, wall);
+  const welcomeDto = new WelcomeDto(player.id, flag, players, walls);
   socket.emit(EventName.WELCOME, welcomeDto);
 
   socket.broadcast.emit(EventName.PLAYER_JOINED, {
@@ -137,9 +146,11 @@ function handleCollisions() {
   // https://learnopengl.com/In-Practice/2D-Game/Collisions/Collision-detection
   // https://learnopengl.com/In-Practice/2D-Game/Collisions/Collision-resolution
   for(const player of playersArray) {
-    const collision = detectCircleRectangleCollision(player, wall);
-    if(collision.colliding) {
-      resolveCircleRectangleCollision(player, collision);
+    for(const wall of walls) {
+      const collision = detectCircleRectangleCollision(player, wall);
+      if(collision.colliding) {
+        resolveCircleRectangleCollision(player, collision);
+      }
     }
   }
 }
@@ -189,6 +200,11 @@ function getDirection(displacement: Vector) {
       max = dotProduct;
       bestMatch = i;
     }
+  }
+
+  // this is ugly but will prevent the server from crashing
+  if(bestMatch === -1) {
+    return 'up';
   }
   
   return compass[bestMatch].direction;

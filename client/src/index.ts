@@ -83,12 +83,14 @@ function initializeSocket() {
         removeAllPlayers();
 
         walls.splice(0, walls.length);
-        const wall = new Wall();
-        wall.bounds = dto.wall.bounds;
-        wall.color = dto.wall.color;
-        wall.position = dto.wall.position;
-        walls.push(wall);
-
+        for(const serverWall of dto.walls) {
+            const wall = new Wall();
+            wall.bounds = serverWall.bounds;
+            wall.color = serverWall.color;
+            wall.position = serverWall.position;
+            walls.push(wall);
+        }
+        
         dto.players.forEach(playerDto => {
             console.log(`joining existing player: ${playerDto.id}`);
             const player = Player.createFromPlayerDto(playerDto);

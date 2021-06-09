@@ -5,9 +5,9 @@ export class Wall {
   bounds: Vector; //distance from position
   color: string;
   
-  constructor() {
-    this.position = new Vector(100, 100);
-    this.bounds = new Vector(20, 400);
-    this.color = 'red';
+  constructor(position: Vector, bounds: Vector, color: string) {
+    this.position = position;
+    this.bounds = bounds;
+    this.color = color;
   }
 }
