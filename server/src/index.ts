@@ -133,27 +133,80 @@ function handleCollisions() {
     } as FlagCapturedDto);
   }
 
-  //player <> wall
+  // player <> wall
+  // https://learnopengl.com/In-Practice/2D-Game/Collisions/Collision-detection
+  // https://learnopengl.com/In-Practice/2D-Game/Collisions/Collision-resolution
   for(const player of playersArray) {
-    if(!areCircleRectangleColliding(player, wall)) {
-      player.color = 'blue';
-      continue;
+    const collision = detectCircleRectangleCollision(player, wall);
+    if(collision.colliding) {
+      resolveCircleRectangleCollision(player, collision);
     }
-    
-    player.color = 'red';
-
-    //consider this for resolving this type of collision
-    //https://learnopengl.com/In-Practice/2D-Game/Collisions/Collision-resolution
   }
+}
+
+// this approach doesn't work very well when colliding with the corners of the rectangle
+// there is a very noticable 'jump' when the player snaps to whichever side of the wall was deemed to have been hit
+function resolveCircleRectangleCollision(player: Player, collision: { colliding: boolean; closestPoint: Vector; playerToClosestPointDisplacement: Vector; }) {
+  const direction = getDirection(collision.playerToClosestPointDisplacement);
+  
+  if(direction === 'left' || direction === 'right') {
+    player.velocity.x = -player.velocity.x;
+    const penetration = player.radius - Math.abs(collision.playerToClosestPointDisplacement.x);
+    if(direction === 'left') {
+      player.position.x += penetration;
+    } else {
+      player.position.x -= penetration;
+    }
+  } else {
+    player.velocity.y = -player.velocity.y;
+    const penetration = player.radius - Math.abs(collision.playerToClosestPointDisplacement.y);
+    if(direction === 'up') {
+      player.position.y += penetration;
+    } else {
+      player.position.y -= penetration;
+    }
+  }
+}
+
+function getDirection(displacement: Vector) {
+  const displacementNormalized = displacement.getUnitVector();
+  const compass = [
+    { unitVector: new Vector( 0, -1), direction: 'up' },
+    { unitVector: new Vector( 0,  1), direction: 'down' },
+    { unitVector: new Vector(-1,  0), direction: 'left' },
+    { unitVector: new Vector( 1,  0), direction: 'right' },
+  ];
+  
+  let max = 0;
+  let bestMatch = -1;
+
+  for(let i = 0; i < compass.length; ++i) {
+    const dotProduct = displacementNormalized.dotProduct(compass[i].unitVector);
+    
+    // this condition will never be true if the circle center is inside the bounds of the AABB
+    // should only be a problem if the player moves really fast
+    if(dotProduct > max) {
+      max = dotProduct;
+      bestMatch = i;
+    }
+  }
+  
+  return compass[bestMatch].direction;
 }
 
 //https://gamedev.stackexchange.com/a/178154/151167
 //https://learnopengl.com/In-Practice/2D-Game/Collisions/Collision-Detection
-function areCircleRectangleColliding(player: Player, wall: Wall) {
-  const distance = player.position.subtract(wall.position);
-  const clampDistance = distance.clamp(wall.bounds.negative, wall.bounds);
-  const closestPoint = wall.position.add(clampDistance);
-  return closestPoint.subtract(player.position).magnitude < player.radius;
+function detectCircleRectangleCollision(player: Player, wall: Wall) {
+  const wallToPlayerDisplacement = player.position.subtract(wall.position);
+  const wallToPlayerDisplacementClamped = wallToPlayerDisplacement.clamp(wall.bounds.negative, wall.bounds);
+  const closestPoint = wall.position.add(wallToPlayerDisplacementClamped);
+  const playerToClosestPointDisplacement = closestPoint.subtract(player.position); //aka "difference"
+  const colliding = playerToClosestPointDisplacement.magnitude <= player.radius;
+  return { 
+    colliding,
+    closestPoint,
+    playerToClosestPointDisplacement,
+  };
 }
 
 // we should use a collidable interface here or something...

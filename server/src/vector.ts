@@ -42,10 +42,11 @@ export class Vector {
     }
 
     getUnitVector() {
-        const unitVector = Vector.ZERO;
-        unitVector.x = this.x / this.magnitude;
-        unitVector.y = this.y / this.magnitude;
-        return unitVector
+        const magnitude = this.magnitude;
+        return new Vector(
+            this.x / magnitude,
+            this.y / magnitude,
+        );
     }
 
     dotProduct(v: Vector): number {
