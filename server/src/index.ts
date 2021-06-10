@@ -24,8 +24,8 @@ const io = new Server(httpServer, {
 const players = new Map<string, Player>();
 const flag = new Flag();
 
-const wallLength = 1000;
-const wallWidth = 20;
+const wallLength = 5000;
+const wallWidth = 100;
 const wallColor = 'red';
 const walls: Wall[] = [
   new Wall(new Vector(-wallLength, 0), new Vector(wallWidth, wallLength + wallWidth), wallColor),
@@ -43,10 +43,7 @@ io.on('connection', socket => {
 
   socket.on(EventName.CHANGE_NAME, name => {
     player.name = name;
-    io.emit(EventName.PLAYER_NAME_CHANGE, {
-      id: player.id,
-      name: player.name,
-    });
+    io.emit(EventName.PLAYER_NAME_CHANGE, player.nameChangeDto());
   });
 
   socket.on(EventName.INPUT, input => {
@@ -61,16 +58,15 @@ io.on('connection', socket => {
       id: leaver.id,
     });
   });
-
   
-  const welcomeDto = new WelcomeDto(player.id, flag, players, walls);
-  socket.emit(EventName.WELCOME, welcomeDto);
+  const welcome = new WelcomeDto();
+  welcome.id = player.id;
+  welcome.flag = flag;
+  welcome.players = Array.from(players.values()).map(player => player.dto());
+  welcome.walls = walls.map(wall => wall.dto());
+  socket.emit(EventName.WELCOME, welcome);
 
-  socket.broadcast.emit(EventName.PLAYER_JOINED, {
-    id: player.id,
-    position: player.position,
-    color: player.color,
-  });
+  socket.broadcast.emit(EventName.PLAYER_JOINED, player.joinedDto());
 });
 
 const port = 3000;

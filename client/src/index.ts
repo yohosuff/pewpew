@@ -17,12 +17,14 @@ import { Flag } from './flag';
 import { Navigation } from './navigation';
 import { LeaderBoard } from './leader-board';
 import { IMenuState } from './menu-state-interface';
-import { Wall } from './wall';
+import { DrawableWall } from './drawable-wall';
 
 import { EventName } from '../../server/src/event-name';
 import { WelcomeDto } from '../../server/src/dtos/welcome-dto';
 import { PlayerUpdateDto } from "../../server/src/dtos/player-update-dto";
 import { FlagCapturedDto } from '../../server/src/dtos/flag-captured-dto';
+import { PlayerNameChangeDto } from '../../server/src/dtos/player-name-change-dto';
+import { PlayerJoinedDto } from '../../server/src/dtos/player-joined-dto';
 
 import { io, Socket } from 'socket.io-client';
 import Swal from 'sweetalert2'
@@ -36,7 +38,7 @@ const navigation = new Navigation();
 const leaderBoard = new LeaderBoard();
 const playersList: Player[] = [];
 const eventHandlers = new Map<string,any>();
-const walls: Wall[] = [];
+const drawableWalls: DrawableWall[] = [];
 
 let me: Player;
 
@@ -80,22 +82,17 @@ function initializeSocket() {
 
         console.log('welcome', dto);
         
-        removeAllPlayers();
-
-        walls.splice(0, walls.length);
-        for(const serverWall of dto.walls) {
-            const wall = new Wall();
-            wall.bounds = serverWall.bounds;
-            wall.color = serverWall.color;
-            wall.position = serverWall.position;
-            walls.push(wall);
-        }
+        drawableWalls.splice(0, drawableWalls.length);
         
-        dto.players.forEach(playerDto => {
-            console.log(`joining existing player: ${playerDto.id}`);
-            const player = Player.createFromPlayerDto(playerDto);
-            addPlayer(player);
-        });
+        dto.walls
+            .map(wall => DrawableWall.fromDto(wall))
+            .forEach(wall => drawableWalls.push(wall));
+
+        removeAllPlayers();
+        
+        dto.players
+            .map(player => Player.fromDto(player))
+            .forEach(player => addPlayer(player));
 
         me = players.get(dto.id);
 
@@ -164,18 +161,22 @@ function registerEventHandlers(socket: Socket) {
         draw();
     });
     
-    registerEventHandler(socket, EventName.PLAYER_NAME_CHANGE, (playerDto: any) => {
-        console.log(`player name change: ${playerDto.id} -> ${playerDto.name}`);
-        const player = players.get(playerDto.id);
-        if (!player) { return; }
-        player.name = playerDto.name;
+    registerEventHandler(socket, EventName.PLAYER_NAME_CHANGE, (dto: PlayerNameChangeDto) => {
+        console.log(`player name change: ${dto.id} -> ${dto.name}`);
+        const player = players.get(dto.id);
+        if (!player) { 
+            console.error(`could not find player with id ${dto.id}`);
+            return;
+        }
+        player.name = dto.name;
     });
     
-    registerEventHandler(socket, EventName.PLAYER_JOINED, (joinedPlayer: any) => {
-        console.log(`player joined: ${joinedPlayer.id}`);
-        const newPlayer = new Player('red');
-        newPlayer.id = joinedPlayer.id;
-        newPlayer.color = joinedPlayer.color;
+    //should this just use a full player dto??
+    registerEventHandler(socket, EventName.PLAYER_JOINED, (dto: PlayerJoinedDto) => {
+        console.log(`player joined: ${dto.id}`);
+        const newPlayer = new Player(dto.color);
+        newPlayer.id = dto.id;
+        //this could be contained in a player manager class
         addPlayer(newPlayer);
         draw();
     });
@@ -225,7 +226,7 @@ function draw() {
         .forEach(drawable => drawable.draw(context, camera));
 
     navigation.draw(context, camera, me, drawables);
-    walls.forEach(wall => wall.draw(context, camera))
+    drawableWalls.forEach(wall => wall.draw(context, camera))
 
     leaderBoard.draw(context, playersList);
     

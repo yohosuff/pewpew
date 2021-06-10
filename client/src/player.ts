@@ -24,7 +24,7 @@ export class Player implements IMarker {
         this.score = 0;
     }
 
-    static createFromPlayerDto(dto: PlayerDto) {
+    static fromDto(dto: PlayerDto) {
         const player = new Player(dto.color);
         player.id = dto.id;
         player.name = dto.name;
