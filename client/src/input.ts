@@ -3,6 +3,7 @@ import { IMenuState } from "./menu-state-interface";
 import { IndividualInput } from "./individual-input";
 
 export class Input {
+    
     public movementChange: Subject<any>;
     movementMappings: Map<string, IndividualInput>;
     moveUp: IndividualInput;

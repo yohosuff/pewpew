@@ -19,16 +19,15 @@ import { LeaderBoard } from './leader-board';
 import { IMenuState } from './menu-state-interface';
 import { DrawableWall } from './drawable-wall';
 
+import { Vector } from '../../server/src/vector';
 import { EventName } from '../../server/src/event-name';
 import { WelcomeDto } from '../../server/src/dtos/welcome-dto';
 import { PlayerDto } from '../../server/src/dtos/player-dto';
-import { PlayerUpdateDto } from "../../server/src/dtos/player-update-dto";
 import { FlagCapturedDto } from '../../server/src/dtos/flag-captured-dto';
-import { PlayerNameChangeDto } from '../../server/src/dtos/player-name-change-dto';
+import { FrameUpdateDto } from '../../server/src/dtos/frame-update-dto';
 
 import { io, Socket } from 'socket.io-client';
 import Swal from 'sweetalert2'
-import { Vector } from '../../server/src/vector';
 
 const camera = new Camera();
 const players = new Map<string, Player>();
@@ -141,16 +140,15 @@ function initializeSocket() {
 }
 
 function registerEventHandlers(socket: Socket) {
-    registerEventHandler(socket, EventName.UPDATE, (updatedPlayers: PlayerUpdateDto[]) => {
-        updatedPlayers.forEach(updatedPlayer => {
+    registerEventHandler(socket, EventName.FRAME_UPDATE, (dto: FrameUpdateDto) => {
+        dto.players.forEach(updatedPlayer => {
             const player = players.get(updatedPlayer.id);
             
             if (!player) { return; }
             
             player.position = Vector.fromDto(updatedPlayer.position);
             player.velocity = Vector.fromDto(updatedPlayer.velocity);
-            player.color = updatedPlayer.color;
-
+            
             if(player.id === me.id) { return; }
             
             player.input.moveLeft.pressed = updatedPlayer.input.left;
@@ -162,10 +160,10 @@ function registerEventHandlers(socket: Socket) {
         draw();
     });
     
-    registerEventHandler(socket, EventName.PLAYER_NAME_CHANGE, (dto: PlayerNameChangeDto) => {
-        console.log(`player name change: ${dto.id} -> ${dto.name}`);
+    registerEventHandler(socket, EventName.PLAYER_UPDATE, (dto: PlayerDto) => {
+        // updating a player (change name, and then others later (eg. color, call sign)) could be part of a player manager class
         const player = players.get(dto.id);
-        if (!player) { 
+        if (!player) {
             console.error(`could not find player with id ${dto.id}`);
             return;
         }
@@ -175,7 +173,7 @@ function registerEventHandlers(socket: Socket) {
     registerEventHandler(socket, EventName.PLAYER_JOINED, (dto: PlayerDto) => {
         console.log(`player joined: ${dto.id}`);
         const player = Player.fromDto(dto);
-        //this could be contained in a player manager class
+        //adding a player could be contained in a player manager class
         addPlayer(player);
         draw();
     });

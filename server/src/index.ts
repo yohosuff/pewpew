@@ -1,15 +1,16 @@
 import { Server } from 'socket.io';
 import { createServer } from 'http';
+import express from 'express';
+
 import { EventName } from './event-name';
 import { Player } from './player';
 import { Vector } from './vector';
 import { Settings } from './settings';
-import express from 'express';
 import { Flag } from './flag';
-import { WelcomeDto } from './dtos/welcome-dto';
-import { PlayerUpdateDto } from './dtos/player-update-dto';
-import { FlagCapturedDto } from './dtos/flag-captured-dto';
 import { Wall } from './wall';
+import { WelcomeDto } from './dtos/welcome-dto';
+import { FlagCapturedDto } from './dtos/flag-captured-dto';
+import { FrameUpdateDto } from './dtos/frame-update-dto';
 
 const app = express();
 const httpServer = createServer(app);
@@ -43,7 +44,7 @@ io.on('connection', socket => {
 
   socket.on(EventName.CHANGE_NAME, name => {
     player.name = name;
-    io.emit(EventName.PLAYER_NAME_CHANGE, player.nameChangeDto());
+    io.emit(EventName.PLAYER_UPDATE, player.dto());
   });
 
   socket.on(EventName.INPUT, input => {
@@ -97,20 +98,17 @@ function update(delta: number) {
   handleInput();
   updatePositions(delta);
   handleCollisions();
-  emitUpdate();
+  emitFrameUpdate();
 }
 
-function emitUpdate() {
-  const playerUpdateDtos = Array.from(players.values()).map(player => {
-    const playerUpdateDto = new PlayerUpdateDto();
-    playerUpdateDto.id = player.id;
-    playerUpdateDto.position = player.position;
-    playerUpdateDto.velocity = player.velocity;
-    playerUpdateDto.input = player.input;
-    playerUpdateDto.color = player.color;
-    return playerUpdateDto;
-  });
-  io.emit(EventName.UPDATE, playerUpdateDtos);
+function emitFrameUpdate() {
+  const dto = new FrameUpdateDto();
+  
+  dto.players = Array
+    .from(players.values())
+    .map(player => player.frameUpdateDto());
+
+  io.emit(EventName.FRAME_UPDATE, dto);
 }
 
 function handleCollisions() {

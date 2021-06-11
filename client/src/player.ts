@@ -1,22 +1,18 @@
-import { PlayerDto } from "../../server/src/dtos/player-dto";
-import { Vector } from "../../server/src/vector";
 import { Camera } from "./camera";
 import { Input } from "./input";
 import { IMarker } from "./marker-interface";
 
-export class Player implements IMarker {
-    id: string;
-    name: string;
-    position: Vector;
-    radius: number;
-    color: string;
-    input: Input;
-    velocity: Vector;
-    score: number;
+import { PlayerBase } from "../../server/src/player-base";
+import { Vector } from "../../server/src/vector";
+import { PlayerDto } from "../../server/src/dtos/player-dto";
 
+export class Player extends PlayerBase implements IMarker {
+    
+    input: Input;
+    
     constructor() {
+        super();
         this.input = new Input();
-        this.velocity = Vector.ZERO;
     }
 
     static fromDto(dto: PlayerDto) {

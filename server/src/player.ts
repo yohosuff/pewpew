@@ -1,25 +1,21 @@
 import { Socket } from "socket.io";
 import { PlayerDto } from "./dtos/player-dto";
-import { PlayerJoinedDto } from "./dtos/player-joined-dto";
-import { PlayerNameChangeDto } from "./dtos/player-name-change-dto";
+import { PlayerFrameUpdateDto } from "./dtos/player-frame-update-dto";
 import { Input } from "./input";
+import { PlayerBase } from "./player-base";
 import { Vector } from "./vector";
 
-export class Player {
-  id: string;
-  name: string;  position: Vector;
-  radius: number;
-  color: string;
-  mass: number;
-  speed: number;
-  velocity: Vector;
-  acceleration: Vector;
+export class Player extends PlayerBase {
+  
   socket: Socket;
   input: Input;
-  score: number;
-
+  
   constructor(socket: Socket) {
+    super();
+    
     this.socket = socket;
+    this.input = new Input();
+
     this.id = socket.id;
     this.position = new Vector(
       Math.floor(Math.random() * 1000 - 500),
@@ -29,9 +25,8 @@ export class Player {
     this.color = "#" + Math.floor(Math.random() * 16777215).toString(16);
     this.mass = 1;
     this.speed = 500;
-    this.velocity = new Vector(0, 0);
-    this.acceleration = new Vector(0, 0);
-    this.input = new Input();
+    this.velocity = Vector.ZERO;
+    this.acceleration = Vector.ZERO;
     this.score = 0;
   }
 
@@ -46,18 +41,12 @@ export class Player {
     return dto;
   }
 
-  joinedDto() {
-    const dto = new PlayerJoinedDto();
+  frameUpdateDto() {
+    const dto = new PlayerFrameUpdateDto();
     dto.id = this.id;
     dto.position = this.position;
-    dto.color = this.color;
-    return dto;
-  }
-
-  nameChangeDto() {
-    const dto = new PlayerNameChangeDto();
-    dto.id = this.id;
-    dto.name = this.name;
+    dto.velocity = this.velocity;
+    dto.input = this.input;
     return dto;
   }
 }
