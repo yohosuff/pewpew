@@ -1,14 +1,11 @@
 import { Camera } from "./camera";
 import { FlagDto } from "../../server/src/dtos/flag-dto";
+import { FlagBase } from "../../server/src/flag-base";
 import { Vector } from "../../server/src/vector";
 import { IMarker } from "./marker-interface";
 
-export class Flag implements IMarker {
-  name: string;
-  position: Vector;
-  radius: number;
-  color: string;
-
+export class Flag extends FlagBase implements IMarker {
+  
   static fromDto(dto: FlagDto) {
     const flag = new Flag();
     flag.color = dto.color;

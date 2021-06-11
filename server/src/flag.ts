@@ -1,15 +1,13 @@
 import { FlagDto } from "./dtos/flag-dto";
+import { FlagBase } from "./flag-base";
 import { Vector } from "./vector";
 
-export class Flag {
-  position: Vector;
-  radius: number;
-  name: string;
-  color: string;
-
+export class Flag extends FlagBase {
+  
   readonly RANGE = 4900;
 
   constructor() {
+    super();
     this.radius = 25;
     this.color = 'white';
     this.name = 'flag';

@@ -1,15 +1,15 @@
 import { Camera } from "./camera";
-import { Wall } from "../../server/src/wall";
 import { WallDto } from "../../server/src/dtos/wall-dto";
+import { WallBase } from "../../server/src/wall-base";
 
-export class DrawableWall extends Wall {
+export class Wall extends WallBase {
 
-  static fromDto(wall: WallDto) {
-    const drawableWall = new DrawableWall();
-    drawableWall.bounds = wall.bounds;
-    drawableWall.color = wall.color;
-    drawableWall.position = wall.position;
-    return drawableWall;
+  static fromDto(dto: WallDto) {
+    const wall = new Wall();
+    wall.bounds = dto.bounds;
+    wall.color = dto.color;
+    wall.position = dto.position;
+    return wall;
   }
 
   draw(context: CanvasRenderingContext2D, camera: Camera) {

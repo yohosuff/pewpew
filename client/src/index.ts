@@ -7,7 +7,7 @@
 //players try to 'kick' a ball into the other team's 'net'
 //grappling other players and flinging them around would be fun
 //add toasts for certain events (player name changes, flag captures, players leaving/joining)
-
+//allow players to pick their own persistant color
 //solution for imperfect collision detection on wall corners... put an immovable circle on the corner so the player hits the circle before the corner of the wall
 //to prevent skipping through walls, add continous collision detection. *gulp*
 
@@ -20,7 +20,7 @@ import { Flag } from './flag';
 import { Navigation } from './navigation';
 import { LeaderBoard } from './leader-board';
 import { IMenuState } from './menu-state-interface';
-import { DrawableWall } from './drawable-wall';
+import { Wall } from './wall';
 
 import { Vector } from '../../server/src/vector';
 import { EventName } from '../../server/src/event-name';
@@ -40,7 +40,7 @@ const navigation = new Navigation();
 const leaderBoard = new LeaderBoard();
 const playersList: Player[] = [];
 const eventHandlers = new Map<string,any>();
-const drawableWalls: DrawableWall[] = [];
+const walls: Wall[] = [];
 
 let me: Player;
 let flag: Flag;
@@ -85,11 +85,11 @@ function initializeSocket() {
 
         console.log('welcome', dto);
         
-        drawableWalls.splice(0, drawableWalls.length);
+        walls.splice(0, walls.length);
         
         dto.walls
-            .map(wall => DrawableWall.fromDto(wall))
-            .forEach(wall => drawableWalls.push(wall));
+            .map(wall => Wall.fromDto(wall))
+            .forEach(wall => walls.push(wall));
 
         removeAllPlayers();
         
@@ -225,7 +225,7 @@ function draw() {
         .forEach(drawable => drawable.draw(context, camera));
 
     navigation.draw(context, camera, me, drawables);
-    drawableWalls.forEach(wall => wall.draw(context, camera))
+    walls.forEach(wall => wall.draw(context, camera))
 
     leaderBoard.draw(context, playersList);
     

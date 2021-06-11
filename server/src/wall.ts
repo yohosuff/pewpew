@@ -1,12 +1,11 @@
 import { WallDto } from "./dtos/wall-dto";
 import { Vector } from "./vector";
+import { WallBase } from "./wall-base";
 
-export class Wall {
-  position: Vector;
-  bounds: Vector;
-  color: string;
+export class Wall extends WallBase {
   
   constructor(position?: Vector, bounds?: Vector, color?: string) {
+    super();
     this.position = position;
     this.bounds = bounds;
     this.color = color;
