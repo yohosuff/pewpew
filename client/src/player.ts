@@ -21,6 +21,7 @@ export class Player extends PlayerBase implements IMarker {
         player.id = dto.id;
         player.name = dto.name;
         player.position = Vector.fromDto(dto.position);
+        player.velocity = Vector.fromDto(dto.velocity);
         player.radius = dto.radius;
         player.score = dto.score;
         return player;
@@ -37,7 +38,7 @@ export class Player extends PlayerBase implements IMarker {
         context.fill();
 
         this.drawEngineThrust(context, camera);
-        //this.drawSpeedArrow(context, camera);
+        this.drawSpeedArrow(context, camera);
         //this.drawScreenPosition(context, camera);
         this.drawName(context, camera);
     }
@@ -49,7 +50,7 @@ export class Player extends PlayerBase implements IMarker {
         context.fillText(
             `${this.name ?? this.id}`,
             camera.getScreenX(this.position),
-            camera.getScreenY(this.position),
+            camera.getScreenY(this.position) - this.radius / 2,
         );
     }
 
@@ -60,7 +61,7 @@ export class Player extends PlayerBase implements IMarker {
         context.fillText(
             `${camera.getScreenPosition(this.position).getString()}`,
             camera.getScreenX(this.position),
-            camera.getScreenY(this.position),
+            camera.getScreenY(this.position) + this.radius + 20,
         );
     }
 

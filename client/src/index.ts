@@ -8,6 +8,9 @@
 //grappling other players and flinging them around would be fun
 //add toasts for certain events (player name changes, flag captures, players leaving/joining)
 
+//solution for imperfect collision detection on wall corners... put an immovable circle on the corner so the player hits the circle before the corner of the wall
+//to prevent skipping through walls, add continous collision detection. *gulp*
+
 import './index.css';
 
 import { Camera } from './camera';
@@ -132,7 +135,6 @@ function initializeSocket() {
         
         flag = Flag.fromDto(dto.flag);
         camera.follow(me);
-        draw();
         registerEventHandlers(socket);
     });
 

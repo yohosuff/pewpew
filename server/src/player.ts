@@ -34,6 +34,7 @@ export class Player extends PlayerBase {
     const dto = new PlayerDto();
     dto.id = this.id;
     dto.position = this.position;
+    dto.velocity = this.velocity;
     dto.color = this.color;
     dto.radius = this.radius;
     dto.name = this.name;
