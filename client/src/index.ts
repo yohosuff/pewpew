@@ -21,19 +21,19 @@ import { DrawableWall } from './drawable-wall';
 
 import { EventName } from '../../server/src/event-name';
 import { WelcomeDto } from '../../server/src/dtos/welcome-dto';
+import { PlayerDto } from '../../server/src/dtos/player-dto';
 import { PlayerUpdateDto } from "../../server/src/dtos/player-update-dto";
 import { FlagCapturedDto } from '../../server/src/dtos/flag-captured-dto';
 import { PlayerNameChangeDto } from '../../server/src/dtos/player-name-change-dto';
-import { PlayerJoinedDto } from '../../server/src/dtos/player-joined-dto';
 
 import { io, Socket } from 'socket.io-client';
 import Swal from 'sweetalert2'
+import { Vector } from '../../server/src/vector';
 
 const camera = new Camera();
 const players = new Map<string, Player>();
 const canvas = createCanvas();
 const context = canvas.getContext('2d');
-const flag = new Flag();
 const navigation = new Navigation();
 const leaderBoard = new LeaderBoard();
 const playersList: Player[] = [];
@@ -41,6 +41,7 @@ const eventHandlers = new Map<string,any>();
 const drawableWalls: DrawableWall[] = [];
 
 let me: Player;
+let flag: Flag;
 
 window.addEventListener('resize', resize);
 
@@ -130,7 +131,7 @@ function initializeSocket() {
             }
         });
         
-        flag.assign(dto.flag);
+        flag = Flag.fromDto(dto.flag);
         camera.follow(me);
         draw();
         registerEventHandlers(socket);
@@ -146,8 +147,8 @@ function registerEventHandlers(socket: Socket) {
             
             if (!player) { return; }
             
-            player.position.assign(updatedPlayer.position);
-            player.velocity.assign(updatedPlayer.velocity);
+            player.position = Vector.fromDto(updatedPlayer.position);
+            player.velocity = Vector.fromDto(updatedPlayer.velocity);
             player.color = updatedPlayer.color;
 
             if(player.id === me.id) { return; }
@@ -171,13 +172,11 @@ function registerEventHandlers(socket: Socket) {
         player.name = dto.name;
     });
     
-    //should this just use a full player dto??
-    registerEventHandler(socket, EventName.PLAYER_JOINED, (dto: PlayerJoinedDto) => {
+    registerEventHandler(socket, EventName.PLAYER_JOINED, (dto: PlayerDto) => {
         console.log(`player joined: ${dto.id}`);
-        const newPlayer = new Player(dto.color);
-        newPlayer.id = dto.id;
+        const player = Player.fromDto(dto);
         //this could be contained in a player manager class
-        addPlayer(newPlayer);
+        addPlayer(player);
         draw();
     });
 
@@ -188,7 +187,7 @@ function registerEventHandlers(socket: Socket) {
     });
     
     registerEventHandler(socket, EventName.FLAG_CAPTURED, (dto: FlagCapturedDto) => {
-        flag.assign(dto.flag);
+        flag = Flag.fromDto(dto.flag);
         const player = players.get(dto.playerId);
         player.score = dto.playerScore;
         playersList.sort((a,b) => b.score - a.score);

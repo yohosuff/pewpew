@@ -1,5 +1,5 @@
 import { Camera } from "./camera";
-import { Flag as ServerFlag } from "../../server/src/flag";
+import { FlagDto } from "../../server/src/dtos/flag-dto";
 import { Vector } from "../../server/src/vector";
 import { IMarker } from "./marker-interface";
 
@@ -9,17 +9,13 @@ export class Flag implements IMarker {
   radius: number;
   color: string;
 
-  constructor() {
-    this.name = 'flag';
-    this.color = 'white';
-    this.radius = 25;
-    this.position = new Vector(0, 0);
-  }
-
-  assign(flag: ServerFlag) {
-    this.position.x = flag.position.x;
-    this.position.y = flag.position.y;
-    this.radius = flag.radius;
+  static fromDto(dto: FlagDto) {
+    const flag = new Flag();
+    flag.color = dto.color;
+    flag.name = dto.name;
+    flag.position = Vector.fromDto(dto.position);
+    flag.radius = dto.radius;
+    return flag;
   }
 
   draw(context: CanvasRenderingContext2D, camera: Camera) {

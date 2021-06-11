@@ -1,10 +1,10 @@
-import { Flag } from "../flag";
+import { FlagDto } from "./flag-dto";
 import { PlayerDto } from "./player-dto";
 import { WallDto } from "./wall-dto";
 
 export class WelcomeDto {
   id: string;
-  flag: Flag;
+  flag: FlagDto;
   players: PlayerDto[];
   walls: WallDto[];
 }

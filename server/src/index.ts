@@ -66,7 +66,7 @@ io.on('connection', socket => {
   welcome.walls = walls.map(wall => wall.dto());
   socket.emit(EventName.WELCOME, welcome);
 
-  socket.broadcast.emit(EventName.PLAYER_JOINED, player.joinedDto());
+  socket.broadcast.emit(EventName.PLAYER_JOINED, player.dto());
 });
 
 const port = 3000;

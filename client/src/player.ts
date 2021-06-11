@@ -4,7 +4,6 @@ import { Camera } from "./camera";
 import { Input } from "./input";
 import { IMarker } from "./marker-interface";
 
-// client and server should share this class
 export class Player implements IMarker {
     id: string;
     name: string;
@@ -15,20 +14,17 @@ export class Player implements IMarker {
     velocity: Vector;
     score: number;
 
-    constructor(color: string) {
-        this.color = color;
-        this.position = Vector.ZERO;
-        this.radius = 50;
+    constructor() {
         this.input = new Input();
         this.velocity = Vector.ZERO;
-        this.score = 0;
     }
 
     static fromDto(dto: PlayerDto) {
-        const player = new Player(dto.color);
+        const player = new Player();
+        player.color = dto.color;
         player.id = dto.id;
         player.name = dto.name;
-        player.position.assign(dto.position);
+        player.position = Vector.fromDto(dto.position);
         player.radius = dto.radius;
         player.score = dto.score;
         return player;

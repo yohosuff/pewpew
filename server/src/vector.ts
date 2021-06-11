@@ -1,11 +1,18 @@
 export class Vector {
-    
+        
     x: number;
     y: number;
 
-    constructor(x: number, y: number) {
+    constructor(x?: number, y?: number) {
         this.x = x;
         this.y = y;
+    }
+
+    static fromDto(v: Vector): Vector {
+        return new Vector(
+            v.x,
+            v.y,
+        );
     }
 
     get magnitude(): number {
@@ -29,12 +36,6 @@ export class Vector {
 
     private clampNumber(number: number, min: number, max: number) {
         return Math.min(Math.max(number, min), max);
-    }
-
-    assign(v: Vector) {
-        this.x = v.x;
-        this.y = v.y;
-        return this;
     }
 
     getString(): string {
