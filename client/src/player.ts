@@ -3,12 +3,13 @@ import { Input } from "./input";
 import { IMarker } from "./marker-interface";
 
 import { PlayerBase } from "../../server/src/player-base";
-import { Vector } from "../../server/src/vector";
 import { PlayerDto } from "../../server/src/dtos/player-dto";
+import * as Matter from 'matter-js';
 
 export class Player extends PlayerBase implements IMarker {
     
     input: Input;
+    velocity: Matter.Vector;
     
     constructor() {
         super();
@@ -20,9 +21,8 @@ export class Player extends PlayerBase implements IMarker {
         player.color = dto.color;
         player.id = dto.id;
         player.name = dto.name;
-        player.position = Vector.fromDto(dto.position);
-        player.velocity = Vector.fromDto(dto.velocity);
-        player.radius = dto.radius;
+        player.body = Matter.Bodies.circle(dto.position.x, dto.position.y, dto.radius);
+        player.velocity = Matter.Vector.create(dto.velocity.x, dto.velocity.y);
         player.score = dto.score;
         return player;
     }
@@ -31,15 +31,16 @@ export class Player extends PlayerBase implements IMarker {
         context.fillStyle = this.color;        
         context.beginPath();
         context.arc(
-            camera.getScreenX(this.position),
-            camera.getScreenY(this.position),
-            this.radius, 0, 2 * Math.PI,
+            camera.getScreenX(this.body.position),
+            camera.getScreenY(this.body.position),
+            this.body.circleRadius, 0, 2 * Math.PI,
         );
         context.fill();
 
         this.drawEngineThrust(context, camera);
-        this.drawSpeedArrow(context, camera);
-        //this.drawScreenPosition(context, camera);
+        // this.drawSpeedArrow(context, camera);
+        // this.drawScreenPosition(context, camera);
+        this.drawWorldPosition(context, camera);
         this.drawName(context, camera);
     }
 
@@ -49,8 +50,8 @@ export class Player extends PlayerBase implements IMarker {
         context.font = "12px Arial";
         context.fillText(
             `${this.name ?? this.id}`,
-            camera.getScreenX(this.position),
-            camera.getScreenY(this.position) - this.radius / 2,
+            camera.getScreenX(this.body.position),
+            camera.getScreenY(this.body.position) - this.body.circleRadius / 2,
         );
     }
 
@@ -59,60 +60,71 @@ export class Player extends PlayerBase implements IMarker {
         context.textAlign = 'center';
         context.font = "12px Arial";
         context.fillText(
-            `${camera.getScreenPosition(this.position).getString()}`,
-            camera.getScreenX(this.position),
-            camera.getScreenY(this.position) + this.radius + 20,
+            `${camera.getScreenPosition(this.body.position).x}, ${camera.getScreenPosition(this.body.position).y}`,
+            camera.getScreenX(this.body.position),
+            camera.getScreenY(this.body.position) + this.body.circleRadius + 20,
         );
     }
 
-    drawSpeedArrow(context: CanvasRenderingContext2D, camera: Camera) {
-        // speed
+    drawWorldPosition(context: CanvasRenderingContext2D, camera: Camera) {
         context.fillStyle = 'white';
         context.textAlign = 'center';
         context.font = "12px Arial";
-        const speed = this.velocity.magnitude / 100;
         context.fillText(
-            `${speed.toFixed(1)} m/s`,
-            camera.getScreenX(this.position),
-            camera.getScreenY(this.position) + 30,
+            `${this.body.position.x.toFixed(0)}, ${this.body.position.y.toFixed(0)}`,
+            camera.getScreenX(this.body.position),
+            camera.getScreenY(this.body.position) + this.body.circleRadius + 20,
         );
-
-        // arrow
-        const a = camera.getScreenPosition(this.position);
-        const b = a.add(this.velocity.getUnitVector().multiplyByScalar(15));
-        context.strokeStyle = 'white';
-        context.beginPath();
-        context.moveTo(a.x, a.y);
-        context.lineTo(b.x, b.y);
-        context.stroke();
-
-        //arrow origin
-        context.fillStyle = 'white'
-        context.beginPath();
-        context.arc(
-            camera.getScreenX(this.position),
-            camera.getScreenY(this.position),
-            3, 0, 2 * Math.PI,
-        );
-        context.fill();
     }
 
+    // drawSpeedArrow(context: CanvasRenderingContext2D, camera: Camera) {
+    //     // speed
+    //     context.fillStyle = 'white';
+    //     context.textAlign = 'center';
+    //     context.font = "12px Arial";
+    //     const speed = this.velocity.magnitude / 100;
+    //     context.fillText(
+    //         `${speed.toFixed(1)} m/s`,
+    //         camera.getScreenX(this.position),
+    //         camera.getScreenY(this.position) + 30,
+    //     );
+
+    //     // arrow
+    //     const a = camera.getScreenPosition(this.position);
+    //     const b = a.add(this.velocity.getUnitVector().multiplyByScalar(15));
+    //     context.strokeStyle = 'white';
+    //     context.beginPath();
+    //     context.moveTo(a.x, a.y);
+    //     context.lineTo(b.x, b.y);
+    //     context.stroke();
+
+    //     //arrow origin
+    //     context.fillStyle = 'white'
+    //     context.beginPath();
+    //     context.arc(
+    //         camera.getScreenX(this.position),
+    //         camera.getScreenY(this.position),
+    //         3, 0, 2 * Math.PI,
+    //     );
+    //     context.fill();
+    // }
+
     drawEngineThrust(context: CanvasRenderingContext2D, camera: Camera) {
-        const screenPosition = camera.getScreenPosition(this.position);
+        const screenPosition = camera.getScreenPosition(this.body.position);
         const flameLength = 100;
         const flameWidth = 20;
-        const gradientPoint0 = new Vector(0, 0);
-        const gradientPoint1 = new Vector(0, 0);
-        const rectPosition = new Vector(0, 0);
+        const gradientPoint0 = Matter.Vector.create(0, 0);
+        const gradientPoint1 = Matter.Vector.create(0, 0);
+        const rectPosition = Matter.Vector.create(0, 0);
         let rectWidth: number;
         let rectHeight: number;
 
         if (this.input.moveLeft.pressed) {
-            gradientPoint0.x = screenPosition.x + this.radius;
+            gradientPoint0.x = screenPosition.x + this.body.circleRadius;
             gradientPoint0.y = screenPosition.y;
-            gradientPoint1.x = screenPosition.x + (this.radius + flameLength);
+            gradientPoint1.x = screenPosition.x + (this.body.circleRadius + flameLength);
             gradientPoint1.y = screenPosition.y;
-            rectPosition.x = screenPosition.x + this.radius;
+            rectPosition.x = screenPosition.x + this.body.circleRadius;
             rectPosition.y = screenPosition.y - flameWidth / 2;
             rectWidth = flameLength;
             rectHeight = flameWidth;
@@ -121,22 +133,22 @@ export class Player extends PlayerBase implements IMarker {
 
         if (this.input.moveUp.pressed) {
             gradientPoint0.x = screenPosition.x;
-            gradientPoint0.y = screenPosition.y + this.radius;
+            gradientPoint0.y = screenPosition.y + this.body.circleRadius;
             gradientPoint1.x = screenPosition.x;
-            gradientPoint1.y = screenPosition.y + (this.radius + flameLength);
+            gradientPoint1.y = screenPosition.y + (this.body.circleRadius + flameLength);
             rectPosition.x = screenPosition.x - flameWidth / 2;
-            rectPosition.y = screenPosition.y + this.radius;
+            rectPosition.y = screenPosition.y + this.body.circleRadius;
             rectWidth = flameWidth;
             rectHeight = flameLength;
             this.drawEngineThrustHelper(context, gradientPoint0, gradientPoint1, rectPosition, rectWidth, rectHeight);
         }
 
         if (this.input.moveRight.pressed) {
-            gradientPoint0.x = screenPosition.x - this.radius;
+            gradientPoint0.x = screenPosition.x - this.body.circleRadius;
             gradientPoint0.y = screenPosition.y;
-            gradientPoint1.x = screenPosition.x - (this.radius + flameLength);
+            gradientPoint1.x = screenPosition.x - (this.body.circleRadius + flameLength);
             gradientPoint1.y = screenPosition.y;
-            rectPosition.x = screenPosition.x - (this.radius + flameLength);
+            rectPosition.x = screenPosition.x - (this.body.circleRadius + flameLength);
             rectPosition.y = screenPosition.y - flameWidth / 2;
             rectWidth = flameLength;
             rectHeight = flameWidth;
@@ -145,11 +157,11 @@ export class Player extends PlayerBase implements IMarker {
 
         if (this.input.moveDown.pressed) {
             gradientPoint0.x = screenPosition.x;
-            gradientPoint0.y = screenPosition.y - this.radius;
+            gradientPoint0.y = screenPosition.y - this.body.circleRadius;
             gradientPoint1.x = screenPosition.x;
-            gradientPoint1.y = screenPosition.y - (this.radius + flameLength);
+            gradientPoint1.y = screenPosition.y - (this.body.circleRadius + flameLength);
             rectPosition.x = screenPosition.x - flameWidth / 2;
-            rectPosition.y = screenPosition.y - (this.radius + flameLength);
+            rectPosition.y = screenPosition.y - (this.body.circleRadius + flameLength);
             rectWidth = flameWidth;
             rectHeight = flameLength;
             this.drawEngineThrustHelper(context, gradientPoint0, gradientPoint1, rectPosition, rectWidth, rectHeight);
@@ -158,9 +170,9 @@ export class Player extends PlayerBase implements IMarker {
 
     drawEngineThrustHelper(
         context: CanvasRenderingContext2D, 
-        gradientPoint0: Vector, 
-        gradientPoint1: Vector, 
-        rectPosition: Vector, 
+        gradientPoint0: Matter.Vector, 
+        gradientPoint1: Matter.Vector, 
+        rectPosition: Matter.Vector, 
         rectWidth: number, 
         rectHeight: number
     ) {
@@ -186,6 +198,6 @@ export class Player extends PlayerBase implements IMarker {
     }
 
     getPositionString() {
-        return `${this.position.getString()}`;
+        return `${this.body.position.x}, ${this.body.position.y}`;
     }
 }

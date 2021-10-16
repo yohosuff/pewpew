@@ -1,11 +1,9 @@
-import { Vector } from "../../server/src/vector";
 import { IIntercept } from "./intercept-interface";
 
 export interface IMarker {
   id?: string;
   name: string;
-  position: Vector;
-  radius: number;
+  body: Matter.Body;
   color: string;
   intercept?: IIntercept;
 }

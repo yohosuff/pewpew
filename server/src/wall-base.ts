@@ -1,7 +1,8 @@
-import { Vector } from "./vector";
+import * as Matter from 'matter-js';
 
 export class WallBase {
-  position: Vector;
-  bounds: Vector;
   color: string;
+  width: number;
+  height: number;
+  position: Matter.Vector;
 }

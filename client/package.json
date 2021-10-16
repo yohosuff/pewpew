@@ -2,7 +2,14 @@
   "scripts": {
     "start": "webpack serve --host 0.0.0.0 --port 80"
   },
+  "dependencies": {
+    "matter-js": "^0.17.1",
+    "rxjs": "^7.1.0",
+    "socket.io-client": "^4.1.2",
+    "sweetalert2": "^11.0.16"
+  },
   "devDependencies": {
+    "@types/matter-js": "^0.17.1",
     "css-loader": "^5.2.5",
     "file-loader": "^6.2.0",
     "html-webpack-plugin": "^5.3.1",
@@ -12,10 +19,5 @@
     "webpack": "^5.37.1",
     "webpack-cli": "^4.7.0",
     "webpack-dev-server": "^3.11.2"
-  },
-  "dependencies": {
-    "rxjs": "^7.1.0",
-    "socket.io-client": "^4.1.2",
-    "sweetalert2": "^11.0.16"
   }
 }

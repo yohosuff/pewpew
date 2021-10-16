@@ -1,10 +1,8 @@
-import { Vector } from "../vector";
-
 export class PlayerDto {
   id: string;
   name: string;
-  position: Vector;
-  velocity: Vector;
+  position: Matter.Vector;
+  velocity: Matter.Vector;
   color: string;
   radius: number;
   score: number;

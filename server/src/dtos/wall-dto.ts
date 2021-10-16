@@ -1,7 +1,7 @@
-import { Vector } from "../vector";
-
 export class WallDto {
-    position: Vector;
-    bounds: Vector;
+    x: number;
+    y: number;
+    w: number;
+    h: number;
     color: string;
 }

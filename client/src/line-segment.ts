@@ -1,12 +1,12 @@
-import { Vector } from "../../server/src/vector";
+import * as Matter from 'matter-js';
 
 export class LineSegment {
-    a: Vector;
-    b: Vector;
+    a: Matter.Vector;
+    b: Matter.Vector;
     
-    constructor(a?: Vector, b?: Vector) {
-        this.a = a ?? new Vector(0, 0);
-        this.b = b ?? new Vector(0, 0);
+    constructor(a?: Matter.Vector, b?: Matter.Vector) {
+        this.a = a ?? Matter.Vector.create(0, 0);
+        this.b = b ?? Matter.Vector.create(0, 0);
     }
 
     applyOffset(ax: number, ay: number, bx: number, by: number) {

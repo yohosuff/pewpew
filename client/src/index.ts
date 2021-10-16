@@ -17,12 +17,11 @@ import { Camera } from './camera';
 import { Player } from "./player";
 import { Settings } from './settings';
 import { Flag } from './flag';
-import { Navigation } from './navigation';
+// import { Navigation } from './navigation';
 import { LeaderBoard } from './leader-board';
 import { IMenuState } from './menu-state-interface';
 import { Wall } from './wall';
 
-import { Vector } from '../../server/src/vector';
 import { EventName } from '../../server/src/event-name';
 import { WelcomeDto } from '../../server/src/dtos/welcome-dto';
 import { PlayerDto } from '../../server/src/dtos/player-dto';
@@ -31,12 +30,14 @@ import { FrameUpdateDto } from '../../server/src/dtos/frame-update-dto';
 
 import { io, Socket } from 'socket.io-client';
 import Swal from 'sweetalert2'
+import * as Matter from 'matter-js';
+
 
 const camera = new Camera();
 const players = new Map<string, Player>();
 const canvas = createCanvas();
 const context = canvas.getContext('2d');
-const navigation = new Navigation();
+// const navigation = new Navigation();
 const leaderBoard = new LeaderBoard();
 const playersList: Player[] = [];
 const eventHandlers = new Map<string,any>();
@@ -148,8 +149,8 @@ function registerEventHandlers(socket: Socket) {
             
             if (!player) { return; }
             
-            player.position = Vector.fromDto(updatedPlayer.position);
-            player.velocity = Vector.fromDto(updatedPlayer.velocity);
+            player.body.position = Matter.Vector.create(updatedPlayer.position.x, updatedPlayer.position.y);
+            player.velocity = Matter.Vector.create(updatedPlayer.velocity.x, updatedPlayer.velocity.y);
             
             if(player.id === me.id) { return; }
             
@@ -224,13 +225,13 @@ function draw() {
         .filter(drawable => camera.canSee(drawable))
         .forEach(drawable => drawable.draw(context, camera));
 
-    navigation.draw(context, camera, me, drawables);
+    // navigation.draw(context, camera, me, drawables);
     walls.forEach(wall => wall.draw(context, camera))
 
     leaderBoard.draw(context, playersList);
     
-    document.body.style.backgroundPositionX = `${-me.position.x}px`;
-    document.body.style.backgroundPositionY = `${-me.position.y}px`;    
+    document.body.style.backgroundPositionX = `${-me.body.position.x}px`;
+    document.body.style.backgroundPositionY = `${-me.body.position.y}px`;
 }
 
 function resize() {

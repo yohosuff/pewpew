@@ -1,8 +1,8 @@
 import { Camera } from "./camera";
 import { FlagDto } from "../../server/src/dtos/flag-dto";
 import { FlagBase } from "../../server/src/flag-base";
-import { Vector } from "../../server/src/vector";
 import { IMarker } from "./marker-interface";
+import * as Matter from 'matter-js';
 
 export class Flag extends FlagBase implements IMarker {
   
@@ -10,8 +10,7 @@ export class Flag extends FlagBase implements IMarker {
     const flag = new Flag();
     flag.color = dto.color;
     flag.name = dto.name;
-    flag.position = Vector.fromDto(dto.position);
-    flag.radius = dto.radius;
+    flag.body = Matter.Bodies.circle(dto.position.x, dto.position.y, dto.radius);
     return flag;
   }
 
@@ -19,9 +18,9 @@ export class Flag extends FlagBase implements IMarker {
     context.fillStyle = this.color;
     context.beginPath();
     context.arc(
-      camera.getScreenX(this.position),
-      camera.getScreenY(this.position),
-      this.radius, 0, 2 * Math.PI,
+      camera.getScreenX(this.body.position),
+      camera.getScreenY(this.body.position),
+      this.body.circleRadius, 0, 2 * Math.PI,
     );
     context.fill();
     
@@ -31,13 +30,13 @@ export class Flag extends FlagBase implements IMarker {
     context.font = `${fontSize}px Arial`;
     context.fillText(
       `FLAG`,
-      camera.getScreenX(this.position),
-      camera.getScreenY(this.position) + fontSize / 2,
+      camera.getScreenX(this.body.position),
+      camera.getScreenY(this.body.position) + fontSize / 2,
     );
     
   }
 
   getPositionString() {
-    return `${this.position.x.toFixed()} ${this.position.y.toFixed()}`;
+    return `${this.body.position.x.toFixed()} ${this.body.position.y.toFixed()}`;
   }
 }

@@ -1,7 +1,5 @@
-import { Vector } from "../vector";
-
 export class FlagDto {
-  position: Vector;
+  position: Matter.Vector;
   radius: number;
   name: string;
   color: string;

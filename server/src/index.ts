@@ -4,13 +4,13 @@ import express from 'express';
 
 import { EventName } from './event-name';
 import { Player } from './player';
-import { Vector } from './vector';
 import { Settings } from './settings';
 import { Flag } from './flag';
 import { Wall } from './wall';
 import { WelcomeDto } from './dtos/welcome-dto';
 import { FlagCapturedDto } from './dtos/flag-captured-dto';
 import { FrameUpdateDto } from './dtos/frame-update-dto';
+import Matter from 'matter-js';
 
 const app = express();
 const httpServer = createServer(app);
@@ -22,18 +22,26 @@ const io = new Server(httpServer, {
   }
 });
 
+const engine = Matter.Engine.create();
+engine.gravity.x = 0;
+engine.gravity.y = 0;
+
 const players = new Map<string, Player>();
+
 const flag = new Flag();
+Matter.Composite.add(engine.world, flag.body);
 
 const wallLength = 5000;
 const wallWidth = 100;
 const wallColor = 'red';
 const walls: Wall[] = [
-  new Wall(new Vector(-wallLength, 0), new Vector(wallWidth, wallLength + wallWidth), wallColor),
-  new Wall(new Vector(wallLength, 0), new Vector(wallWidth, wallLength + wallWidth), wallColor),
-  new Wall(new Vector(0, wallLength), new Vector(wallLength + wallWidth, wallWidth), wallColor),
-  new Wall(new Vector(0, -wallLength), new Vector(wallLength + wallWidth, wallWidth), wallColor),
+  new Wall(-wallLength, 0, wallWidth, wallLength + wallWidth, wallColor),
+  new Wall(wallLength, 0, wallWidth, wallLength + wallWidth, wallColor),
+  new Wall(0, wallLength, wallLength + wallWidth, wallWidth, wallColor),
+  new Wall(0, -wallLength, wallLength + wallWidth, wallWidth, wallColor),
 ];
+
+walls.forEach(wall => Matter.Composite.add(engine.world, wall.body));
 
 io.on('connection', socket => {
 
@@ -42,6 +50,8 @@ io.on('connection', socket => {
   const player = new Player(socket);
   players.set(player.id, player);
 
+  Matter.Composite.add(engine.world, player.body);
+  
   socket.on(EventName.CHANGE_NAME, name => {
     player.name = name;
     io.emit(EventName.PLAYER_UPDATE, player.dto());
@@ -54,6 +64,7 @@ io.on('connection', socket => {
   socket.on(EventName.DISCONNECT, () => {
     console.log('disconnect', socket.id);
     const leaver = players.get(socket.id);
+    Matter.Composite.remove(engine.world, leaver.body);
     players.delete(leaver.id);
     socket.broadcast.emit(EventName.PLAYER_LEFT, {
       id: leaver.id,
@@ -62,7 +73,7 @@ io.on('connection', socket => {
   
   const welcome = new WelcomeDto();
   welcome.id = player.id;
-  welcome.flag = flag;
+  welcome.flag = flag.dto();
   welcome.players = Array.from(players.values()).map(player => player.dto());
   welcome.walls = walls.map(wall => wall.dto());
   socket.emit(EventName.WELCOME, welcome);
@@ -79,26 +90,13 @@ httpServer.listen(port, host, () => {
 
 //////////////////////
 
-function getTime() {
-  return Number(process.hrtime.bigint() / 1000000n);
-}
-
-let previous = getTime();
 const tickLength = 1000 / 60;
 
 function loop() {
-  const now = getTime();
-  const delta = (now - previous) / 1000;
-  previous = now;
-  update(delta);
-  setTimeout(loop, tickLength);
-}
-
-function update(delta: number) {
   handleInput();
-  updatePositions(delta);
-  handleCollisions();
+  Matter.Engine.update(engine, tickLength);
   emitFrameUpdate();
+  setTimeout(loop, tickLength);
 }
 
 function emitFrameUpdate() {
@@ -111,182 +109,49 @@ function emitFrameUpdate() {
   io.emit(EventName.FRAME_UPDATE, dto);
 }
 
-function handleCollisions() {
-  const playersArray = Array.from(players.values());
-
-  //player <> player
-  for (let i = 0; i < playersArray.length - 1; ++i) {
-    for (let j = i + 1; j < playersArray.length; ++j) {
-      const a = playersArray[i];
-      const b = playersArray[j];
-      if (!areColliding(a, b)) { continue; }
-      collideElastically(a, b);
-    }
-  }
-
-  //player <> flag
-  for (const player of playersArray) {
-    if (!areColliding(player, flag)) { continue; }
-    player.score += 1;
-    flag.reposition();
-    io.emit(EventName.FLAG_CAPTURED, {
-      flag,
-      playerId: player.id,
-      playerScore: player.score,
-    } as FlagCapturedDto);
-  }
-
-  // player <> wall
-  // https://learnopengl.com/In-Practice/2D-Game/Collisions/Collision-detection
-  // https://learnopengl.com/In-Practice/2D-Game/Collisions/Collision-resolution
-  for(const player of playersArray) {
-    for(const wall of walls) {
-      const collision = detectCircleRectangleCollision(player, wall);
-      if(collision.colliding) {
-        resolveCircleRectangleCollision(player, collision);
-      }
-    }
-  }
-}
-
-// this approach doesn't work very well when colliding with the corners of the rectangle
-// there is a very noticable 'jump' when the player snaps to whichever side of the wall was deemed to have been hit
-function resolveCircleRectangleCollision(player: Player, collision: { colliding: boolean; closestPoint: Vector; playerToClosestPointDisplacement: Vector; }) {
-  const direction = getDirection(collision.playerToClosestPointDisplacement);
-  
-  if(direction === 'left' || direction === 'right') {
-    player.velocity.x = -player.velocity.x;
-    const penetration = player.radius - Math.abs(collision.playerToClosestPointDisplacement.x);
-    if(direction === 'left') {
-      player.position.x += penetration;
-    } else {
-      player.position.x -= penetration;
-    }
-  } else {
-    player.velocity.y = -player.velocity.y;
-    const penetration = player.radius - Math.abs(collision.playerToClosestPointDisplacement.y);
-    if(direction === 'up') {
-      player.position.y += penetration;
-    } else {
-      player.position.y -= penetration;
-    }
-  }
-}
-
-function getDirection(displacement: Vector) {
-  const displacementNormalized = displacement.getUnitVector();
-  const compass = [
-    { unitVector: new Vector( 0, -1), direction: 'up' },
-    { unitVector: new Vector( 0,  1), direction: 'down' },
-    { unitVector: new Vector(-1,  0), direction: 'left' },
-    { unitVector: new Vector( 1,  0), direction: 'right' },
-  ];
-  
-  let max = 0;
-  let bestMatch = -1;
-
-  for(let i = 0; i < compass.length; ++i) {
-    const dotProduct = displacementNormalized.dotProduct(compass[i].unitVector);
-    
-    // this condition will never be true if the circle center is inside the bounds of the AABB
-    // should only be a problem if the player moves really fast
-    if(dotProduct > max) {
-      max = dotProduct;
-      bestMatch = i;
-    }
-  }
-
-  // this is ugly but will prevent the server from crashing
-  if(bestMatch === -1) {
-    return 'up';
-  }
-  
-  return compass[bestMatch].direction;
-}
-
-//https://gamedev.stackexchange.com/a/178154/151167
-//https://learnopengl.com/In-Practice/2D-Game/Collisions/Collision-Detection
-function detectCircleRectangleCollision(player: Player, wall: Wall) {
-  const wallToPlayerDisplacement = player.position.subtract(wall.position);
-  const wallToPlayerDisplacementClamped = wallToPlayerDisplacement.clamp(wall.bounds.negative, wall.bounds);
-  const closestPoint = wall.position.add(wallToPlayerDisplacementClamped);
-  const playerToClosestPointDisplacement = closestPoint.subtract(player.position); //aka "difference"
-  const colliding = playerToClosestPointDisplacement.magnitude <= player.radius;
-  return { 
-    colliding,
-    closestPoint,
-    playerToClosestPointDisplacement,
-  };
-}
-
-// we should use a collidable interface here or something...
-function areColliding(a: Player | Flag, b: Player | Flag) {
-  const distance = a.position.distanceFrom(b.position);
-  return distance <= a.radius + b.radius;
-}
-
-function collideElastically(a: Player, b: Player) {
-  separateCollidees(a, b);
-  const aVelocity = getNewVelocity(a, b);
-  const bVelocity = getNewVelocity(b, a);
-  a.velocity = aVelocity;
-  b.velocity = bVelocity;
-}
-
-// https://github.com/OneLoneCoder/videos/blob/master/OneLoneCoder_Balls1.cpp
-function separateCollidees(a: Player, b: Player) {
-  const distance = a.position.distanceFrom(b.position);
-  const overlap = 0.5 * (distance - a.radius - b.radius);
-  a.position.x -= overlap * (a.position.x - b.position.x) / distance;
-  a.position.y -= overlap * (a.position.y - b.position.y) / distance;
-  b.position.x += overlap * (a.position.x - b.position.x) / distance;
-  b.position.y += overlap * (a.position.y - b.position.y) / distance;
-}
-
-// https://en.wikipedia.org/wiki/Elastic_collision#Two-dimensional_collision_with_two_moving_objects
-function getNewVelocity(a: Player, b: Player) {
-  const mass = 2 * b.mass / (a.mass + b.mass);
-  const velocityDiff = a.velocity.subtract(b.velocity);
-  const positionDiff = a.position.subtract(b.position);
-  const dotProduct = velocityDiff.dotProduct(positionDiff);
-  const magnitude = Math.pow(positionDiff.magnitude, 2);
-  const rightSide = positionDiff.multiplyByScalar(mass * dotProduct / magnitude)
-  return a.velocity.subtract(rightSide);
-}
-
-function updatePositions(delta: number) {
-  Array.from(players.values()).forEach(player => {
-    player.velocity.x += player.acceleration.x * delta;
-    player.velocity.y += player.acceleration.y * delta;
-    player.position.x += player.velocity.x * delta;
-    player.position.y += player.velocity.y * delta;
-  });
-}
+//handle flag capturing after things are moving around
+//https://brm.io/matter-js/docs/classes/Engine.html#event_collisionStart
+// Matter.Events.on(engine, "collisionStart", event => {
+//   console.log(event);
+//   event.pairs.forEach(pair => {
+//     //need a reference to the player or flag from the body
+//     //pair.bodyA.
+//     player.score += 1;
+//     flag.reposition();
+//     io.emit(EventName.FLAG_CAPTURED, {
+//       flag,
+//       playerId: player.id,
+//       playerScore: player.score,
+//     } as FlagCapturedDto);
+//   })
+// })
 
 function handleInput() {
   Array.from(players.values()).forEach(player => {
     const input = player.input;
-
-    const acceleration = new Vector(0, 0);
+    const force = Matter.Vector.create();
 
     if (input.up) {
-      acceleration.y -= player.speed;
+      force.y -= player.speed;
     }
 
     if (input.down) {
-      acceleration.y += player.speed;
+      force.y += player.speed;
     }
 
     if (input.left) {
-      acceleration.x -= player.speed;
+      force.x -= player.speed;
     }
     
     if (input.right) {
-      acceleration.x += player.speed;
+      force.x += player.speed;
     }
 
-    player.acceleration = acceleration;
+    Matter.Body.applyForce(player.body, player.body.position, force);
   });
 }
+
+
+//Matter.Runner.run(engine); //how can I hook into this to send frame updates to clients?
 
 loop();

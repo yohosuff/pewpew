@@ -1,6 +1,6 @@
+import Matter from "matter-js";
 import { FlagDto } from "./dtos/flag-dto";
 import { FlagBase } from "./flag-base";
-import { Vector } from "./vector";
 
 export class Flag extends FlagBase {
   
@@ -8,7 +8,7 @@ export class Flag extends FlagBase {
 
   constructor() {
     super();
-    this.radius = 25;
+    this.body = Matter.Bodies.circle(0, 0, 25, { isStatic: true });
     this.color = 'white';
     this.name = 'flag';
     this.reposition();
@@ -16,8 +16,8 @@ export class Flag extends FlagBase {
 
   dto() {
     const dto = new FlagDto();
-    dto.position = this.position;
-    dto.radius = this.radius;
+    dto.position = this.body.position;
+    dto.radius = this.body.circleRadius;
     dto.name = this.name;
     dto.color = this.color;
     return dto;
@@ -25,10 +25,10 @@ export class Flag extends FlagBase {
 
   reposition() {
     const range = this.RANGE;
-    this.position = new Vector(
-      this.getRandomNumber(-range, range),
-      this.getRandomNumber(-range, range),
-    );
+    const position = Matter.Vector.create();
+    position.x = this.getRandomNumber(-range, range);
+    position.y = this.getRandomNumber(-range, range);
+    Matter.Body.setPosition(this.body, position);
   }
 
   private getRandomNumber(min: number, max: number) {

@@ -1,9 +1,9 @@
-import { Vector } from "../../server/src/vector";
+import * as Matter from 'matter-js';
 import { LineSegment } from "./line-segment";
 import { Player } from "./player";
 
 export class Camera {
-    position: Vector;
+    position: Matter.Vector;
 
     left: number;
     right: number;
@@ -16,7 +16,7 @@ export class Camera {
     rightBorder: LineSegment;
     
     constructor() {
-        this.position = new Vector(0, 0);
+        this.position = Matter.Vector.create();
         this.recalculateBorders();
     }
 
@@ -27,58 +27,58 @@ export class Camera {
         this.bottom = window.innerHeight;
 
         this.topBorder = new LineSegment(
-            new Vector(this.left, this.top),
-            new Vector(this.right, this.top),
+            Matter.Vector.create(this.left, this.top),
+            Matter.Vector.create(this.right, this.top),
         );
         this.bottomBorder = new LineSegment(
-            new Vector(this.left, this.bottom),
-            new Vector(this.right, this.bottom)
+            Matter.Vector.create(this.left, this.bottom),
+            Matter.Vector.create(this.right, this.bottom),
         );
         this.leftBorder = new LineSegment(
-            new Vector(this.left, this.top),
-            new Vector(this.left, this.bottom)
+            Matter.Vector.create(this.left, this.top),
+            Matter.Vector.create(this.left, this.bottom),
         );
         this.rightBorder = new LineSegment(
-            new Vector(this.right, this.top),
-            new Vector(this.right, this.bottom)
+            Matter.Vector.create(this.right, this.top),
+            Matter.Vector.create(this.right, this.bottom),
         );
     }
 
     follow(followee: Player) {
-        this.position.x = followee.position.x;
-        this.position.y = followee.position.y;
+        this.position.x = followee.body.position.x;
+        this.position.y = followee.body.position.y;
     }
 
-    getScreenX(worldPosition: Vector) {
+    getScreenX(worldPosition: Matter.Vector) {
         const offset = this.position.x - window.innerWidth / 2;
         return worldPosition.x - offset;
     }
 
-    getScreenY(worldPosition: Vector) {
+    getScreenY(worldPosition: Matter.Vector) {
         const offset = this.position.y - window.innerHeight / 2;
         return worldPosition.y - offset;
     }
 
-    getWorldPosition(screenPosition: Vector): Vector {
+    getWorldPosition(screenPosition: Matter.Vector): Matter.Vector {
         const offsetX = this.position.x - window.innerWidth / 2;
         const offsetY = this.position.y - window.innerHeight / 2;
-        const worldPosition = new Vector(
+        const worldPosition = Matter.Vector.create(
             screenPosition.x + offsetX,
             screenPosition.y + offsetY,
         );
         return worldPosition;
     }
 
-    getScreenPosition(worldPosition: Vector): Vector {
-        return new Vector(
+    getScreenPosition(worldPosition: Matter.Vector): Matter.Vector {
+        return Matter.Vector.create(
             this.getScreenX(worldPosition),
             this.getScreenY(worldPosition),
         );
     }
 
     canSee(drawable: any) {
-        const x = this.getScreenX(drawable.position);
-        const y = this.getScreenY(drawable.position);
+        const x = this.getScreenX(drawable.body.position);
+        const y = this.getScreenY(drawable.body.position);
 
         if(x < -drawable.radius) return false;
         if(y < -drawable.radius) return false;
