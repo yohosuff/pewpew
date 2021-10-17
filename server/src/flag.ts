@@ -9,7 +9,7 @@ export class Flag extends FlagBase {
   constructor(range: number) {
     super();
     this.range = range;
-    this.body = Matter.Bodies.circle(0, 0, 25, { isStatic: true });
+    this.body = Matter.Bodies.circle(0, 0, 25, { isStatic: true, isSensor: true });
     this.color = 'white';
     this.name = 'flag';
     this.reposition();

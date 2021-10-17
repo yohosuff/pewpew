@@ -26,6 +26,7 @@ const engine = Matter.Engine.create();
 engine.gravity.x = 0;
 engine.gravity.y = 0;
 
+const playersByBodyId = new Map<number, Player>();
 const players = new Map<string, Player>();
 
 const length = 1000;
@@ -42,6 +43,7 @@ io.on('connection', socket => {
   
   const player = new Player(socket);
   players.set(player.id, player);
+  playersByBodyId.set(player.body.id, player);
 
   Matter.Composite.add(engine.world, player.body);
   
@@ -59,6 +61,7 @@ io.on('connection', socket => {
     const leaver = players.get(socket.id);
     Matter.Composite.remove(engine.world, leaver.body);
     players.delete(leaver.id);
+    playersByBodyId.delete(leaver.body.id);
     socket.broadcast.emit(EventName.PLAYER_LEFT, {
       id: leaver.id,
     });
@@ -102,22 +105,35 @@ function emitFrameUpdate() {
   io.emit(EventName.FRAME_UPDATE, dto);
 }
 
-//handle flag capturing after things are moving around
-//https://brm.io/matter-js/docs/classes/Engine.html#event_collisionStart
-// Matter.Events.on(engine, "collisionStart", event => {
-//   console.log(event);
-//   event.pairs.forEach(pair => {
-//     //need a reference to the player or flag from the body
-//     //pair.bodyA.
-//     player.score += 1;
-//     flag.reposition();
-//     io.emit(EventName.FLAG_CAPTURED, {
-//       flag,
-//       playerId: player.id,
-//       playerScore: player.score,
-//     } as FlagCapturedDto);
-//   })
-// })
+Matter.Events.on(engine, "collisionStart", event => {
+  event.pairs.forEach(pair => {
+    handlePlayerFlagCollision(pair);
+  });
+});
+
+function handlePlayerFlagCollision(pair: Matter.IPair) {
+  if (pair.bodyA !== flag.body && pair.bodyB !== flag.body) {
+    return;
+  }
+
+  const bodyId = pair.bodyA === flag.body ? pair.bodyB.id : pair.bodyA.id;
+  const player = playersByBodyId.get(bodyId);
+
+  if (!player) {
+    return;
+  }
+
+  player.score += 1;
+  flag.reposition();
+
+  const flagCapturedDto: FlagCapturedDto = {
+    flag: flag.dto(),
+    playerId: player.id,
+    playerScore: player.score,
+  };
+
+  io.emit(EventName.FLAG_CAPTURED, flagCapturedDto);
+}
 
 function handleInput() {
   Array.from(players.values()).forEach(player => {
