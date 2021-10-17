@@ -28,11 +28,13 @@ engine.gravity.y = 0;
 
 const players = new Map<string, Player>();
 
-const flag = new Flag();
-Matter.Composite.add(engine.world, flag.body);
+const length = 1000;
 
-const walls = createBoundaryWalls();
+const walls = createBoundaryWalls(length, 20, 'red');
 walls.forEach(wall => Matter.Composite.add(engine.world, wall.body));
+
+const flag = new Flag(length);
+Matter.Composite.add(engine.world, flag.body);
 
 io.on('connection', socket => {
 
@@ -142,11 +144,7 @@ function handleInput() {
   });
 }
 
-function createBoundaryWalls() {
-  const length = 1000;
-  const width = 20;
-  const color = 'red';
-  
+function createBoundaryWalls(length: number, width: number, color: string) {
   const walls: Wall[] = [
     new Wall(-length / 2, 0, width, length + width, color), //left
     new Wall(length / 2, 0, width, length + width, color), //right

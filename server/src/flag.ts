@@ -4,10 +4,11 @@ import { FlagBase } from "./flag-base";
 
 export class Flag extends FlagBase {
   
-  readonly RANGE = 4900;
-
-  constructor() {
+  range: number;
+  
+  constructor(range: number) {
     super();
+    this.range = range;
     this.body = Matter.Bodies.circle(0, 0, 25, { isStatic: true });
     this.color = 'white';
     this.name = 'flag';
@@ -24,10 +25,10 @@ export class Flag extends FlagBase {
   }
 
   reposition() {
-    const range = this.RANGE;
+    const halfRange = this.range / 2;
     const position = Matter.Vector.create();
-    position.x = this.getRandomNumber(-range, range);
-    position.y = this.getRandomNumber(-range, range);
+    position.x = this.getRandomNumber(-halfRange, halfRange);
+    position.y = this.getRandomNumber(-halfRange, halfRange);
     Matter.Body.setPosition(this.body, position);
   }
 
