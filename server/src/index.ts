@@ -1,7 +1,6 @@
 import { Server } from 'socket.io';
 import { createServer } from 'http';
 import express from 'express';
-
 import { EventName } from './event-name';
 import { Player } from './player';
 import { Settings } from './settings';

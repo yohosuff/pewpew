@@ -1,16 +1,3 @@
-//fun idea: fly around and shoot missiles at each other
-//turret auto targets, can cycle targets, missiles track target, firing has cooldown?
-//add button to enable ai with steering behavior to hit other players
-//do 'king of the hill' where the 'hill' is a cirular area that randomly relocates and players try to bash each other out of it
-//the flag should try to run away from the players
-//infect other players with control virus that randomizes their controls
-//players try to 'kick' a ball into the other team's 'net'
-//grappling other players and flinging them around would be fun
-//add toasts for certain events (player name changes, flag captures, players leaving/joining)
-//allow players to pick their own persistant color
-//solution for imperfect collision detection on wall corners... put an immovable circle on the corner so the player hits the circle before the corner of the wall
-//to prevent skipping through walls, add continous collision detection. *gulp*
-
 import './index.css';
 
 import { Camera } from './camera';

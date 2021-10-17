@@ -1,0 +1,15 @@
+- try running physics simulation on both the client and the server
+  - perform regular updates (15/second?) to sync the client simulation with the server, as the server is the authority
+  - keep in mind that the sync may cause jitter (probably when the players are rapidly changing their inputs)
+- fun idea: fly around and shoot missiles at each other
+- turret auto targets, can cycle targets, missiles track target, firing has cooldown?
+- add steering behavior so player automatically tries to hit other players
+- do 'king of the hill' where the 'hill' is a cirular area that randomly relocates and players try to bash each other out of it
+- the flag should try to run away from the players
+- infect other players with control virus that randomizes their controls
+- players try to 'kick' a ball into the other team's 'net'
+- grappling other players and flinging them around would be fun
+- add toasts for certain events (player name changes, flag captures, players leaving/joining)
+- allow players to pick their own persistant color
+- Continuous Collision Detection
+  - not supported by matter.js; box2d.js allegedly supports it
