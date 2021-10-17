@@ -29,19 +29,19 @@ engine.gravity.y = 0;
 const playersByBodyId = new Map<number, Player>();
 const players = new Map<string, Player>();
 
-const length = 1000;
+const wallLength = 5000;
 
-const walls = createBoundaryWalls(length, 20, 'red');
+const walls = createBoundaryWalls(wallLength, 20, 'red');
 walls.forEach(wall => Matter.Composite.add(engine.world, wall.body));
 
-const flag = new Flag(length);
+const flag = new Flag(wallLength);
 Matter.Composite.add(engine.world, flag.body);
 
 io.on('connection', socket => {
 
   console.log('connection', socket.id);
   
-  const player = new Player(socket);
+  const player = new Player(socket, wallLength);
   players.set(player.id, player);
   playersByBodyId.set(player.body.id, player);
 
@@ -86,7 +86,7 @@ httpServer.listen(port, host, () => {
 
 //////////////////////
 
-const tickLength = 1000 / 30;
+const tickLength = 1000 / 60;
 
 function loop() {
   handleInput();

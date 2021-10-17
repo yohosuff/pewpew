@@ -10,7 +10,7 @@ export class Player extends PlayerBase {
   socket: Socket;
   input: Input;
   
-  constructor(socket: Socket) {
+  constructor(socket: Socket, wallLength: number) {
     super();
     
     this.socket = socket;
@@ -20,17 +20,14 @@ export class Player extends PlayerBase {
     this.speed = 0.01;
     this.score = 0;
 
-    // this.body = Matter.Bodies.circle(
-    //   Math.floor(Math.random() * 1000 - 500),
-    //   Math.floor(Math.random() * 1000 - 500),
-    //   50,
-    // );
-
     this.body = Matter.Bodies.circle(
-      0,
-      0,
+      Math.floor(Math.random() * wallLength - wallLength / 2),
+      Math.floor(Math.random() * wallLength - wallLength / 2),
       50,
     );
+
+    this.body.restitution = 1;
+    this.body.frictionAir = 0;
   }
 
   dto() {
