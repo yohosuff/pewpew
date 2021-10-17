@@ -17,7 +17,7 @@ export class Wall extends WallBase {
     //matter.js - are rectangle positions in the center of the rectangle?
     const dto = new WallDto();
     dto.x = this.body.position.x;
-    dto.x = this.body.position.x;
+    dto.y = this.body.position.y;
     dto.w = this.width;
     dto.h = this.height;
     dto.color = this.color;

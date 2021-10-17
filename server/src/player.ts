@@ -20,9 +20,15 @@ export class Player extends PlayerBase {
     this.speed = 0.01;
     this.score = 0;
 
+    // this.body = Matter.Bodies.circle(
+    //   Math.floor(Math.random() * 1000 - 500),
+    //   Math.floor(Math.random() * 1000 - 500),
+    //   50,
+    // );
+
     this.body = Matter.Bodies.circle(
-      Math.floor(Math.random() * 1000 - 500),
-      Math.floor(Math.random() * 1000 - 500),
+      0,
+      0,
       50,
     );
   }

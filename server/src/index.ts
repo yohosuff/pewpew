@@ -31,16 +31,7 @@ const players = new Map<string, Player>();
 const flag = new Flag();
 Matter.Composite.add(engine.world, flag.body);
 
-const wallLength = 5000;
-const wallWidth = 100;
-const wallColor = 'red';
-const walls: Wall[] = [
-  new Wall(-wallLength, 0, wallWidth, wallLength + wallWidth, wallColor),
-  new Wall(wallLength, 0, wallWidth, wallLength + wallWidth, wallColor),
-  new Wall(0, wallLength, wallLength + wallWidth, wallWidth, wallColor),
-  new Wall(0, -wallLength, wallLength + wallWidth, wallWidth, wallColor),
-];
-
+const walls = createBoundaryWalls();
 walls.forEach(wall => Matter.Composite.add(engine.world, wall.body));
 
 io.on('connection', socket => {
@@ -90,7 +81,7 @@ httpServer.listen(port, host, () => {
 
 //////////////////////
 
-const tickLength = 1000 / 60;
+const tickLength = 1000 / 30;
 
 function loop() {
   handleInput();
@@ -151,7 +142,22 @@ function handleInput() {
   });
 }
 
+function createBoundaryWalls() {
+  const length = 1000;
+  const width = 20;
+  const color = 'red';
+  
+  const walls: Wall[] = [
+    new Wall(-length / 2, 0, width, length + width, color), //left
+    new Wall(length / 2, 0, width, length + width, color), //right
+    new Wall(0, -length / 2, length + width, width, color), //top
+    new Wall(0, length / 2, length + width, width, color), //bottom
+  ];
 
+  return walls;
+}
+
+// is this still needed?
 //Matter.Runner.run(engine); //how can I hook into this to send frame updates to clients?
 
 loop();
