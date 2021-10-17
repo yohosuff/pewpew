@@ -143,6 +143,7 @@ function initializeSocket() {
 }
 
 function registerEventHandlers(socket: Socket) {
+
     registerEventHandler(socket, EventName.FRAME_UPDATE, (dto: FrameUpdateDto) => {
         dto.players.forEach(updatedPlayer => {
             const player = players.get(updatedPlayer.id);
@@ -150,7 +151,7 @@ function registerEventHandlers(socket: Socket) {
             if (!player) { return; }
             
             player.body.position = Matter.Vector.create(updatedPlayer.position.x, updatedPlayer.position.y);
-            player.velocity = Matter.Vector.create(updatedPlayer.velocity.x, updatedPlayer.velocity.y);
+            player.body.velocity = Matter.Vector.create(updatedPlayer.velocity.x, updatedPlayer.velocity.y);
             
             if(player.id === me.id) { return; }
             

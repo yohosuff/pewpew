@@ -9,7 +9,6 @@ import * as Matter from 'matter-js';
 export class Player extends PlayerBase implements IMarker {
     
     input: Input;
-    velocity: Matter.Vector;
     
     constructor() {
         super();
@@ -22,7 +21,6 @@ export class Player extends PlayerBase implements IMarker {
         player.id = dto.id;
         player.name = dto.name;
         player.body = Matter.Bodies.circle(dto.position.x, dto.position.y, dto.radius);
-        player.velocity = Matter.Vector.create(dto.velocity.x, dto.velocity.y);
         player.score = dto.score;
         return player;
     }
@@ -38,7 +36,7 @@ export class Player extends PlayerBase implements IMarker {
         context.fill();
 
         this.drawEngineThrust(context, camera);
-        // this.drawSpeedArrow(context, camera);
+        this.drawSpeedArrow(context, camera);
         // this.drawScreenPosition(context, camera);
         this.drawWorldPosition(context, camera);
         this.drawName(context, camera);
@@ -77,37 +75,43 @@ export class Player extends PlayerBase implements IMarker {
         );
     }
 
-    // drawSpeedArrow(context: CanvasRenderingContext2D, camera: Camera) {
-    //     // speed
-    //     context.fillStyle = 'white';
-    //     context.textAlign = 'center';
-    //     context.font = "12px Arial";
-    //     const speed = this.velocity.magnitude / 100;
-    //     context.fillText(
-    //         `${speed.toFixed(1)} m/s`,
-    //         camera.getScreenX(this.position),
-    //         camera.getScreenY(this.position) + 30,
-    //     );
+    drawSpeedArrow(context: CanvasRenderingContext2D, camera: Camera) {
+        // speed
+        context.fillStyle = 'white';
+        context.textAlign = 'center';
+        context.font = "12px Arial";
 
-    //     // arrow
-    //     const a = camera.getScreenPosition(this.position);
-    //     const b = a.add(this.velocity.getUnitVector().multiplyByScalar(15));
-    //     context.strokeStyle = 'white';
-    //     context.beginPath();
-    //     context.moveTo(a.x, a.y);
-    //     context.lineTo(b.x, b.y);
-    //     context.stroke();
+        // TODO: use this.body.speed here once physics engine is running client side
+        const speed = Matter.Vector.magnitude(this.body.velocity) / 10;
+        
+        context.fillText(
+            `${speed.toFixed(1)} m/s`,
+            camera.getScreenX(this.body.position),
+            camera.getScreenY(this.body.position) + 30,
+        );
 
-    //     //arrow origin
-    //     context.fillStyle = 'white'
-    //     context.beginPath();
-    //     context.arc(
-    //         camera.getScreenX(this.position),
-    //         camera.getScreenY(this.position),
-    //         3, 0, 2 * Math.PI,
-    //     );
-    //     context.fill();
-    // }
+        // arrow line
+        const a = camera.getScreenPosition(this.body.position);
+        const unitVector = Matter.Vector.normalise(this.body.velocity);
+        const vector = Matter.Vector.mult(unitVector, 15);
+        const b = Matter.Vector.add(a, vector);
+
+        context.strokeStyle = 'white';
+        context.beginPath();
+        context.moveTo(a.x, a.y);
+        context.lineTo(b.x, b.y);
+        context.stroke();
+
+        //arrow origin
+        context.fillStyle = 'white'
+        context.beginPath();
+        context.arc(
+            camera.getScreenX(this.body.position),
+            camera.getScreenY(this.body.position),
+            3, 0, 2 * Math.PI,
+        );
+        context.fill();
+    }
 
     drawEngineThrust(context: CanvasRenderingContext2D, camera: Camera) {
         const screenPosition = camera.getScreenPosition(this.body.position);
